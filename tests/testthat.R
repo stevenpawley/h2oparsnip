@@ -1,4 +1,4 @@
 library(testthat)
-library(waterparsnip)
+library(h2oparsnip)
 
-test_check("waterparsnip")
+test_check("h2oparsnip")

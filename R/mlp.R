@@ -43,20 +43,23 @@ h2o_mlp_train <-
       )
     }
 
-    if (activation == "relu") {
-      activation <- "Rectifier"
-      message("Using h2o 'Rectifier' activation function")
-    }
+    activation <- switch(
+      activation,
+      relu = "Rectifier",
+      tanh = "Tanh",
+      maxout = "Maxout",
+      activation
+    )
 
-    # if (activation == "Rectifier" & hidden_dropout_ratios > 0) {
-    #   activation <- "RectifierWithDropout"
-    #
-    # } else if (activation == "Tanh" & hidden_dropout_ratios > 0) {
-    #   activation <- "TanhWithDropout"
-    #
-    # } else if (activation == "Maxout" & hidden_dropout_ratios > 0) {
-    #   activation <- "MaxoutWithDropout"
-    # }
+    if (activation == "Rectifier" & hidden_dropout_ratios > 0) {
+      activation <- "RectifierWithDropout"
+
+    } else if (activation == "Tanh" & hidden_dropout_ratios > 0) {
+      activation <- "TanhWithDropout"
+
+    } else if (activation == "Maxout" & hidden_dropout_ratios > 0) {
+      activation <- "MaxoutWithDropout"
+    }
 
     if (hidden_dropout_ratios == 0)
       hidden_dropout_ratios <- NULL
