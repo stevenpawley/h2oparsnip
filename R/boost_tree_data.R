@@ -1,85 +1,96 @@
-#' Wrapper to add the `h2o` engine to the parsnip `mlp` model specification
+#' Wrapper to add the `h2o` engine to the parsnip `boost_tree` model
+#' specification
 #'
 #' @return NULL
 #' @export
-add_mlp_h2o <- function() {
+add_boost_tree_h2o <- function() {
 
-  parsnip::set_model_engine("mlp", "classification", "h2o")
-  parsnip::set_model_engine("mlp", "regression", "h2o")
-  parsnip::set_dependency("mlp", "h2o", "h2o")
+  parsnip::set_model_engine("boost_tree", "classification", "h2o")
+  parsnip::set_model_engine("boost_tree", "regression", "h2o")
+
+  parsnip::set_dependency("boost_tree", "h2o", "h2o")
 
   parsnip::set_model_arg(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
-    parsnip = "cost",
-    original = "l2",
-    func = list(pkg = "dials", fun = "cost"),
+    parsnip = "trees",
+    original = "ntrees",
+    func = list(pkg = "dials", fun = "trees"),
     has_submodel = FALSE
   )
 
   parsnip::set_model_arg(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
-    parsnip = "dropout",
-    original = "hidden_dropout_ratios",
-    func = list(pkg = "dials", fun = "dropout"),
+    parsnip = "tree_depth",
+    original = "max_depth",
+    func = list(pkg = "dials", fun = "max_depth"),
     has_submodel = FALSE
   )
 
   parsnip::set_model_arg(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
-    parsnip = "hidden_units",
-    original = "hidden",
-    func = list(pkg = "dials", fun = "hidden_units"),
+    parsnip = "min_n",
+    original = "min_rows",
+    func = list(pkg = "dials", fun = "min_n"),
     has_submodel = FALSE
   )
 
   parsnip::set_model_arg(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
-    parsnip = "epochs",
-    original = "epochs",
-    func = list(pkg = "dials", fun = "epochs"),
+    parsnip = "learn_rate",
+    original = "learn_rate",
+    func = list(pkg = "dials", fun = "learn_rate"),
     has_submodel = FALSE
   )
 
   parsnip::set_model_arg(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
-    parsnip = "activation",
-    original = "activation",
-    func = list(pkg = "dials", fun = "activation"),
+    parsnip = "sample_size",
+    original = "sample_rate",
+    func = list(pkg = "dials", fun = "sample_size"),
+    has_submodel = FALSE
+  )
+
+  parsnip::set_model_arg(
+    model = "boost_tree",
+    eng = "h2o",
+    parsnip = "mtry",
+    original = "col_sample_rate",
+    func = list(pkg = "dials", fun = "mtry"),
     has_submodel = FALSE
   )
 
   parsnip::set_fit(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
     mode = "regression",
     value = list(
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
-      func = c(fun = "h2o_mlp_train"),
+      func = c(fun = "h2o_gbm_train"),
       defaults = list()
     )
   )
 
   parsnip::set_fit(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
     mode = "classification",
     value = list(
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
-      func = c(fun = "h2o_mlp_train"),
+      func = c(fun = "h2o_gbm_train"),
       defaults = list()
     )
   )
 
   # regression predict
   parsnip::set_pred(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
     mode = "regression",
     type = "numeric",
@@ -98,7 +109,7 @@ add_mlp_h2o <- function() {
   )
 
   parsnip::set_pred(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
     mode = "regression",
     type = "raw",
@@ -114,9 +125,8 @@ add_mlp_h2o <- function() {
     )
   )
 
-  # classification predict
   parsnip::set_pred(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
     mode = "classification",
     type = "class",
@@ -126,7 +136,8 @@ add_mlp_h2o <- function() {
         object$lvl[apply(x[, 2:ncol(x)], 1, which.max)]
       },
       func = c(fun = "h2o_pred"),
-      args = list(
+      args =
+        list(
           object = quote(object$fit),
           newdata = quote(new_data)
         )
@@ -134,25 +145,7 @@ add_mlp_h2o <- function() {
   )
 
   parsnip::set_pred(
-    model = "mlp",
-    eng = "h2o",
-    mode = "classification",
-    type = "raw",
-    value = list(
-      pre = NULL,
-      post = function(x, object) {
-        object$lvl[apply(x[, 2:ncol(x)], 1, which.max)]
-      },
-      func = c(fun = "h2o_pred"),
-      args = list(
-        object = quote(object$fit),
-        newdata = quote(new_data))
-    )
-  )
-
-  # probabilities
-  parsnip::set_pred(
-    model = "mlp",
+    model = "boost_tree",
     eng = "h2o",
     mode = "classification",
     type = "prob",
@@ -170,4 +163,18 @@ add_mlp_h2o <- function() {
     )
   )
 
+  parsnip::set_pred(
+    model = "boost_tree",
+    eng = "h2o",
+    mode = "classification",
+    type = "raw",
+    value = list(
+      pre = NULL,
+      post = NULL,
+      func = c(fun = "predict"),
+      args = list(
+        object = quote(object$fit),
+        newdata = quote(new_data))
+    )
+  )
 }

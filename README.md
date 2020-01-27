@@ -11,7 +11,8 @@
 This package is early in development. Currently the following h2o algorithms
 are implemented:
 
-- mlp - h2o engine added to parsnip::mlp algorithm
+- h2o.deeplearning engine added to parsnip::mlp model specification
+- h2o.gbm engine added to parsnip::boost_tree model specification
 
 ## Installation
 

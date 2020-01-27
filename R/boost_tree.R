@@ -1,4 +1,4 @@
-#' Wrapper for training a h2o.deeplearning model as part of a parsnip `mlp`
+#' Wrapper for training a h2o.gbm model as part of a parsnip `boost_tree`
 #' h2o engine
 #'
 #' @param formula formula
@@ -16,14 +16,15 @@
 #'
 #' @return evaluated h2o model call
 #' @export
-h2o_mlp_train <-
+h2o_gbm_train <-
   function(formula,
            data,
-           l2 = 0,
-           hidden_dropout_ratios = 0,
-           hidden = 200,
-           epochs = 10,
-           activation = "Rectifier",
+           ntrees = 50,
+           max_depth = 5,
+           min_rows = 10,
+           learn_rate = 0.1,
+           sample_rate = 1.0,
+           col_sample_rate = 1.0,
            ...) {
 
     # extract terms
@@ -34,43 +35,26 @@ h2o_mlp_train <-
     if (!inherits(data, "H2OFrame"))
       data <- h2o::as.h2o(data)
 
-    # remap dials::values_activation to permissible h2o activation values
-    if (activation %in% c("linear", "elu", "softmax")) {
-      stop(
-        paste(
-          activation,
-          "activation function is not available when using the h2o engine.")
-      )
+    # convert mtry (number of features) and min_rows to proportions
+    if (col_sample_rate > 1) {
+      col_sample_rate <- col_sample_rate / length(X)
     }
 
-    if (activation == "relu") {
-      activation <- "Rectifier"
-      message("Using h2o 'Rectifier' activation function")
+    if (min_rows > 1) {
+      min_rows <- min_rows / nrow(data)
     }
-
-    # if (activation == "Rectifier" & hidden_dropout_ratios > 0) {
-    #   activation <- "RectifierWithDropout"
-    #
-    # } else if (activation == "Tanh" & hidden_dropout_ratios > 0) {
-    #   activation <- "TanhWithDropout"
-    #
-    # } else if (activation == "Maxout" & hidden_dropout_ratios > 0) {
-    #   activation <- "MaxoutWithDropout"
-    # }
-
-    if (hidden_dropout_ratios == 0)
-      hidden_dropout_ratios <- NULL
 
     # define arguments
     args <- list(
       x = X,
       y = y,
       training_frame = data,
-      l2 = l2,
-      hidden_dropout_ratios = hidden_dropout_ratios,
-      hidden = hidden,
-      epochs = epochs,
-      activation = activation
+      ntrees = ntrees,
+      max_depth = max_depth,
+      min_rows = min_rows,
+      learn_rate = learn_rate,
+      sample_rate = sample_rate,
+      col_sample_rate = col_sample_rate
     )
 
     others <- list(...)
@@ -78,10 +62,10 @@ h2o_mlp_train <-
     # create unevaluated model call
     args <- args[lapply(args, length) > 0]
 
-    model_call <- rlang::call2(.fn = "h2o.deeplearning", !!!args, .ns = "h2o")
+    model_call <- rlang::call2(.fn = "h2o.gbm", !!!args, .ns = "h2o")
 
     if (length(others) > 0)
       model_call <- rlang::call_modify(model_call, !!!others)
 
     rlang::eval_tidy(model_call)
-}
+  }
