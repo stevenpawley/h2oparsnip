@@ -64,6 +64,15 @@ add_boost_tree_h2o <- function() {
     has_submodel = FALSE
   )
 
+  parsnip::set_model_arg(
+    model = "boost_tree",
+    eng = "h2o",
+    parsnip = "loss_reduction",
+    original = "min_split_improvement",
+    func = list(pkg = "dials", fun = "loss_reduction"),
+    has_submodel = FALSE
+  )
+
   parsnip::set_fit(
     model = "boost_tree",
     eng = "h2o",
