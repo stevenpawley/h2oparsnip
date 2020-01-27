@@ -5,7 +5,7 @@ Version: 0.1.0
 Author: Steven Pawley
 Maintainer: Steven Pawley <dr.stevenpawley@gmail.com>
 Description: Bindings for additional models for use with the 'parsnip' package.
-    Models include all supervised learning algorithms available is the R H2O
+    Models include learning algorithms available is the R H2O
     package.
 License: MIT + file LICENSE
 URL: https://github.com/stevenpawley/waterparsnip
