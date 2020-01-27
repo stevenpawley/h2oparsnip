@@ -1,4 +1,4 @@
-Package: waterparsnip
+Package: h2oparsnip
 Type: Package
 Title: Model Wrappers for H2O models
 Version: 0.1.0
