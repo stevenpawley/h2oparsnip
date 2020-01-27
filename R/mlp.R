@@ -38,21 +38,28 @@ h2o_train <-
       data <- h2o::as.h2o(data)
 
     # remap dials::values_activation to permissible h2o activation values
-    if (activation %in% c("linear", "elu", "softmax"))
-      stop(paste(activation, "activation function is not available when using the h2o engine"))
-
-    if (activation == "relu")
-      activation <- "Rectifier"
-
-    if (activation == "Rectifier" & hidden_dropout_ratios > 0) {
-      activation <- "RectifierWithDropout"
-
-    } else if (activation == "Tanh" & hidden_dropout_ratios > 0) {
-      activation <- "TanhWithDropout"
-
-    } else if (activation == "Maxout" & hidden_dropout_ratios > 0) {
-      activation <- "MaxoutWithDropout"
+    if (activation %in% c("linear", "elu", "softmax")) {
+      stop(
+        paste(
+          activation,
+          "activation function is not available when using the h2o engine.")
+      )
     }
+
+    if (activation == "relu") {
+      activation <- "Rectifier"
+      message("Using h2o 'Rectifier' activation function")
+    }
+
+    # if (activation == "Rectifier" & hidden_dropout_ratios > 0) {
+    #   activation <- "RectifierWithDropout"
+    #
+    # } else if (activation == "Tanh" & hidden_dropout_ratios > 0) {
+    #   activation <- "TanhWithDropout"
+    #
+    # } else if (activation == "Maxout" & hidden_dropout_ratios > 0) {
+    #   activation <- "MaxoutWithDropout"
+    # }
 
     if (hidden_dropout_ratios == 0)
       hidden_dropout_ratios <- NULL
@@ -100,4 +107,3 @@ h2o_pred <- function(object, newdata, ...) {
   res <- stats::predict(object, newdata, ...)
   tibble::as_tibble(res)
 }
-

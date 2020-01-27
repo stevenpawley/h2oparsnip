@@ -50,7 +50,7 @@ add_mlp_h2o <- function() {
     eng = "h2o",
     parsnip = "activation",
     original = "activation",
-    func = list(pkg = "dials", fun = "activation"),
+    func = list(pkg = "h2oparsnip", fun = "activation"),
     has_submodel = FALSE
   )
 
@@ -60,7 +60,7 @@ add_mlp_h2o <- function() {
     mode = "regression",
     value = list(
       interface = "formula",
-      protect = c("data"),
+      protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_train"),
       defaults = list()
     )
@@ -72,7 +72,7 @@ add_mlp_h2o <- function() {
     mode = "classification",
     value = list(
       interface = "formula",
-      protect = c("data"),
+      protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_train"),
       defaults = list()
     )

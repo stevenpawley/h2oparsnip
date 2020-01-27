@@ -88,3 +88,36 @@ test_that('mlp h2o non-formula method', {
   expect_equal(clf_probs[[2]], h2o_clf_preds$versicolor)
   expect_equal(clf_probs[[3]], h2o_clf_preds$virginica)
 })
+
+
+test_that('mlp h2o automatic use of activation function with dropout', {
+
+  # rectifier with dropout
+  h2o_clf_fitted <-
+    h2o::h2o.deeplearning(
+      x = 1:4,
+      y = 5,
+      training_frame = as.h2o(iris_df),
+      hidden = 100,
+      activation = "RectifierWithDropout",
+      hidden_dropout_ratios = 0.2,
+      seed = 1234,
+      reproducible = TRUE
+    )
+  h2o_clf_preds <- predict(h2o_clf_fitted, as.h2o(iris_df))
+  h2o_clf_preds <- as_tibble(h2o_clf_preds)
+
+  mlp_clf <-
+    mlp(
+      mode = "classification",
+      hidden_units = 100,
+      activation = "relu",
+      dropout = 0.2
+    ) %>%
+    set_engine("h2o", seed = 1234, reproducible = TRUE)
+
+  fitted_clf <- mlp_clf %>% fit_xy(iris_df[, -5], iris_df$Species)
+  clf_preds <- predict(fitted_clf, iris_df)
+  expect_equal(clf_preds[[1]], h2o_clf_preds$predict)
+
+})
