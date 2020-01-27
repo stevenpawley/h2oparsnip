@@ -3,24 +3,21 @@ Type: Package
 Title: Model Wrappers for H2O models
 Version: 0.1.0
 Author: Steven Pawley
-Maintainer: Steven Pawley <dr@stevenpawley@gmail.com>
+Maintainer: Steven Pawley <dr.stevenpawley@gmail.com>
 Description: Bindings for additional models for use with the 'parsnip' package.
     Models include all supervised learning algorithms available is the R H2O
     package.
 License: MIT + file LICENSE
 URL: https://github.com/stevenpawley/waterparsnip
-Depends:
-    parsnip (>= 0.0.5),
-    h2o
 Suggests:
-    testhat,
     testthat
 Encoding: UTF-8
 LazyData: true
 Imports:
-    purrr,
     rlang,
     tibble,
-    dplyr,
-    tidyr
+    magrittr,
+    parsnip,
+    h2o
 BugReports: https://github.com/stevenpawley/waterparsnip/issues
+RoxygenNote: 7.0.2
