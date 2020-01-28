@@ -1,17 +1,17 @@
-#' Wrapper to add the `h2o` engine to the parsnip `boost_tree` model
+#' Wrapper to add the `h2o` engine to the parsnip `rand_forest` model
 #' specification
 #'
 #' @return NULL
 #' @export
-add_boost_tree_h2o <- function() {
+add_rand_forest_h2o <- function() {
 
-  parsnip::set_model_engine("boost_tree", "classification", "h2o")
-  parsnip::set_model_engine("boost_tree", "regression", "h2o")
+  parsnip::set_model_engine("rand_forest", "classification", "h2o")
+  parsnip::set_model_engine("rand_forest", "regression", "h2o")
 
-  parsnip::set_dependency("boost_tree", "h2o", "h2o")
+  parsnip::set_dependency("rand_forest", "h2o", "h2o")
 
   parsnip::set_model_arg(
-    model = "boost_tree",
+    model = "rand_forest",
     eng = "h2o",
     parsnip = "trees",
     original = "ntrees",
@@ -20,16 +20,7 @@ add_boost_tree_h2o <- function() {
   )
 
   parsnip::set_model_arg(
-    model = "boost_tree",
-    eng = "h2o",
-    parsnip = "tree_depth",
-    original = "max_depth",
-    func = list(pkg = "dials", fun = "tree_depth"),
-    has_submodel = FALSE
-  )
-
-  parsnip::set_model_arg(
-    model = "boost_tree",
+    model = "rand_forest",
     eng = "h2o",
     parsnip = "min_n",
     original = "min_rows",
@@ -38,68 +29,41 @@ add_boost_tree_h2o <- function() {
   )
 
   parsnip::set_model_arg(
-    model = "boost_tree",
-    eng = "h2o",
-    parsnip = "learn_rate",
-    original = "learn_rate",
-    func = list(pkg = "dials", fun = "learn_rate"),
-    has_submodel = FALSE
-  )
-
-  parsnip::set_model_arg(
-    model = "boost_tree",
-    eng = "h2o",
-    parsnip = "sample_size",
-    original = "sample_rate",
-    func = list(pkg = "dials", fun = "sample_size"),
-    has_submodel = FALSE
-  )
-
-  parsnip::set_model_arg(
-    model = "boost_tree",
+    model = "rand_forest",
     eng = "h2o",
     parsnip = "mtry",
-    original = "col_sample_rate",
+    original = "mtries",
     func = list(pkg = "dials", fun = "mtry"),
     has_submodel = FALSE
   )
 
-  parsnip::set_model_arg(
-    model = "boost_tree",
-    eng = "h2o",
-    parsnip = "loss_reduction",
-    original = "min_split_improvement",
-    func = list(pkg = "dials", fun = "loss_reduction"),
-    has_submodel = FALSE
-  )
-
   parsnip::set_fit(
-    model = "boost_tree",
+    model = "rand_forest",
     eng = "h2o",
     mode = "regression",
     value = list(
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
-      func = c(fun = "h2o_gbm_train"),
+      func = c(fun = "h2o_rf_train"),
       defaults = list()
     )
   )
 
   parsnip::set_fit(
-    model = "boost_tree",
+    model = "rand_forest",
     eng = "h2o",
     mode = "classification",
     value = list(
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
-      func = c(fun = "h2o_gbm_train"),
+      func = c(fun = "h2o_rf_train"),
       defaults = list()
     )
   )
 
   # regression predict
   parsnip::set_pred(
-    model = "boost_tree",
+    model = "rand_forest",
     eng = "h2o",
     mode = "regression",
     type = "numeric",
@@ -118,7 +82,7 @@ add_boost_tree_h2o <- function() {
   )
 
   parsnip::set_pred(
-    model = "boost_tree",
+    model = "rand_forest",
     eng = "h2o",
     mode = "regression",
     type = "raw",
@@ -135,7 +99,7 @@ add_boost_tree_h2o <- function() {
   )
 
   parsnip::set_pred(
-    model = "boost_tree",
+    model = "rand_forest",
     eng = "h2o",
     mode = "classification",
     type = "class",
@@ -154,7 +118,7 @@ add_boost_tree_h2o <- function() {
   )
 
   parsnip::set_pred(
-    model = "boost_tree",
+    model = "rand_forest",
     eng = "h2o",
     mode = "classification",
     type = "prob",
@@ -173,7 +137,7 @@ add_boost_tree_h2o <- function() {
   )
 
   parsnip::set_pred(
-    model = "boost_tree",
+    model = "rand_forest",
     eng = "h2o",
     mode = "classification",
     type = "raw",

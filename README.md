@@ -13,6 +13,7 @@ are implemented:
 
 - h2o.deeplearning engine added to parsnip::mlp model specification
 - h2o.gbm engine added to parsnip::boost_tree model specification
+- h2o.randomForest engine added to parsnip::rand_forest model specification
 
 ## Installation
 
