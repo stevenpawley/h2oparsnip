@@ -28,19 +28,6 @@ h2o_rf_train <-
     if (!inherits(data, "H2OFrame"))
       data <- h2o::as.h2o(data)
 
-    if (mtries > length(X)) {
-      mtries <- length(X)
-    }
-
-    if (mtries %/% 1 == 0) {
-      warning("mtry should be an integer. Setting to default of -1")
-      mtries <- -1
-    }
-
-    if (min_rows > 1) {
-      min_rows <- min_rows / nrow(data)
-    }
-
     # define arguments
     args <- list(
       x = X,

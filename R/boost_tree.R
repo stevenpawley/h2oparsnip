@@ -44,10 +44,6 @@ h2o_gbm_train <-
       col_sample_rate <- col_sample_rate / length(X)
     }
 
-    if (min_rows > 1) {
-      min_rows <- min_rows / nrow(data)
-    }
-
     # define arguments
     args <- list(
       x = X,
