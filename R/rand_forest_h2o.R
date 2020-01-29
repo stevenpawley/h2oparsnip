@@ -7,7 +7,6 @@ add_rand_forest_h2o <- function() {
 
   parsnip::set_model_engine("rand_forest", "classification", "h2o")
   parsnip::set_model_engine("rand_forest", "regression", "h2o")
-
   parsnip::set_dependency("rand_forest", "h2o", "h2o")
 
   parsnip::set_model_arg(
@@ -18,7 +17,6 @@ add_rand_forest_h2o <- function() {
     func = list(pkg = "dials", fun = "trees"),
     has_submodel = FALSE
   )
-
   parsnip::set_model_arg(
     model = "rand_forest",
     eng = "h2o",
@@ -27,7 +25,6 @@ add_rand_forest_h2o <- function() {
     func = list(pkg = "dials", fun = "min_n"),
     has_submodel = FALSE
   )
-
   parsnip::set_model_arg(
     model = "rand_forest",
     eng = "h2o",
@@ -36,7 +33,6 @@ add_rand_forest_h2o <- function() {
     func = list(pkg = "dials", fun = "mtry"),
     has_submodel = FALSE
   )
-
   parsnip::set_fit(
     model = "rand_forest",
     eng = "h2o",
@@ -48,7 +44,6 @@ add_rand_forest_h2o <- function() {
       defaults = list()
     )
   )
-
   parsnip::set_fit(
     model = "rand_forest",
     eng = "h2o",
@@ -68,86 +63,114 @@ add_rand_forest_h2o <- function() {
     mode = "regression",
     type = "numeric",
     value = list(
-      pre = NULL,
-      post = function(x, object) {
-        x$predict
-      },
-      func = c(fun = "h2o_pred"),
-      args =
-        list(
-          object = quote(object$fit),
-          newdata = quote(new_data)
-        )
+      pre = function(x, object) h2o::as.h2o(x),
+      post = function(x, object) as.data.frame(x)$predict,
+      func = c(pkg = "h2o", fun = "h2o.predict"),
+      args = list(
+        object = quote(object$fit),
+        newdata = quote(new_data)
+      )
     )
   )
-
   parsnip::set_pred(
     model = "rand_forest",
     eng = "h2o",
     mode = "regression",
     type = "raw",
     value = list(
-      pre = NULL,
-      post = function(x, object) {
-        x$predict
-      },
-      func = c(fun = "h2o_pred"),
+      pre = function(x, object) h2o::as.h2o(x),
+      post = function(x, object) as.data.frame(x),
+      func = c(pkg = "h2o", fun = "h2o.predict"),
       args = list(
         object = quote(object$fit),
-        newdata = quote(new_data))
+        newdata = quote(new_data)
+      )
     )
   )
 
+  # classification predict
   parsnip::set_pred(
     model = "rand_forest",
     eng = "h2o",
     mode = "classification",
     type = "class",
     value = list(
-      pre = NULL,
-      post = function(x, object) {
-        object$lvl[apply(x[, 2:ncol(x)], 1, which.max)]
-      },
-      func = c(fun = "h2o_pred"),
-      args =
-        list(
-          object = quote(object$fit),
-          newdata = quote(new_data)
-        )
+      pre = function(x, object) h2o::as.h2o(x),
+      post = function(x, object) as.data.frame(x)$predict,
+      func = c(pkg = "h2o", fun = "h2o.predict"),
+      args = list(
+        object = quote(object$fit),
+        newdata = quote(new_data)
+      )
     )
   )
-
   parsnip::set_pred(
     model = "rand_forest",
     eng = "h2o",
     mode = "classification",
     type = "prob",
     value = list(
-      pre = NULL,
-      post = function(x, object) {
-        x[, 2:ncol(x)]
-      },
-      func = c(fun = "h2o_pred"),
-      args =
-        list(
-          object = quote(object$fit),
-          newdata = quote(new_data)
-        )
+      pre = function(x, object) h2o::as.h2o(x),
+      post = function(x, object) as.data.frame(x[, 2:ncol(x)]),
+      func = c(pkg = "h2o", fun = "h2o.predict"),
+      args = list(
+        object = quote(object$fit),
+        newdata = quote(new_data)
+      )
     )
   )
-
   parsnip::set_pred(
     model = "rand_forest",
     eng = "h2o",
     mode = "classification",
     type = "raw",
     value = list(
-      pre = NULL,
-      post = NULL,
-      func = c(fun = "predict"),
+      pre = function(x, object) h2o::as.h2o(x),
+      post = function(x, object) as.data.frame(x),
+      func = c(pkg = "h2o", fun = "h2o.predict"),
       args = list(
         object = quote(object$fit),
-        newdata = quote(new_data))
+        newdata = quote(new_data)
+      )
     )
   )
 }
+
+#' Wrapper for training a h2o.randomForest model as part of a parsnip
+#' `rand_forest` h2o engine
+#'
+#' @param formula formula
+#' @param data data.frame of training data
+#' @param ntrees integer, the number of trees to build (default = 50)
+#' @param min_rows integer, the minimum number of observations for a leaf
+#'   (default = 10)
+#' @param mtries integer, the number of columns to randomly select at each
+#' level. Default of -1 is sqrt(p) for classification and (p/3) for regression.
+#' @param ... other arguments not currently used
+#'
+#' @return evaluated h2o model call
+#' @export
+h2o_rf_train <-
+  function(formula,
+           data,
+           ntrees = 50,
+           min_rows = 10,
+           mtries = -1,
+           ...) {
+
+    # convert to H2OFrame, get response and predictor names
+    pre <- preprocess_training(formula, data)
+
+    # define arguments
+    args <- list(
+      x = pre$X,
+      y = pre$y,
+      training_frame = pre$data,
+      ntrees = ntrees,
+      min_rows = min_rows,
+      mtries = mtries
+    )
+
+    others <- list(...)
+    make_h2o_call("h2o.randomForest", args, others)
+  }

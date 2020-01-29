@@ -7,7 +7,6 @@ add_boost_tree_h2o <- function() {
 
   parsnip::set_model_engine("boost_tree", "classification", "h2o")
   parsnip::set_model_engine("boost_tree", "regression", "h2o")
-
   parsnip::set_dependency("boost_tree", "h2o", "h2o")
 
   parsnip::set_model_arg(
@@ -18,7 +17,6 @@ add_boost_tree_h2o <- function() {
     func = list(pkg = "dials", fun = "trees"),
     has_submodel = FALSE
   )
-
   parsnip::set_model_arg(
     model = "boost_tree",
     eng = "h2o",
@@ -27,7 +25,6 @@ add_boost_tree_h2o <- function() {
     func = list(pkg = "dials", fun = "tree_depth"),
     has_submodel = FALSE
   )
-
   parsnip::set_model_arg(
     model = "boost_tree",
     eng = "h2o",
@@ -36,7 +33,6 @@ add_boost_tree_h2o <- function() {
     func = list(pkg = "dials", fun = "min_n"),
     has_submodel = FALSE
   )
-
   parsnip::set_model_arg(
     model = "boost_tree",
     eng = "h2o",
@@ -45,7 +41,6 @@ add_boost_tree_h2o <- function() {
     func = list(pkg = "dials", fun = "learn_rate"),
     has_submodel = FALSE
   )
-
   parsnip::set_model_arg(
     model = "boost_tree",
     eng = "h2o",
@@ -54,7 +49,6 @@ add_boost_tree_h2o <- function() {
     func = list(pkg = "dials", fun = "sample_size"),
     has_submodel = FALSE
   )
-
   parsnip::set_model_arg(
     model = "boost_tree",
     eng = "h2o",
@@ -63,7 +57,6 @@ add_boost_tree_h2o <- function() {
     func = list(pkg = "dials", fun = "mtry"),
     has_submodel = FALSE
   )
-
   parsnip::set_model_arg(
     model = "boost_tree",
     eng = "h2o",
@@ -72,7 +65,6 @@ add_boost_tree_h2o <- function() {
     func = list(pkg = "dials", fun = "loss_reduction"),
     has_submodel = FALSE
   )
-
   parsnip::set_fit(
     model = "boost_tree",
     eng = "h2o",
@@ -84,7 +76,6 @@ add_boost_tree_h2o <- function() {
       defaults = list()
     )
   )
-
   parsnip::set_fit(
     model = "boost_tree",
     eng = "h2o",
@@ -104,86 +95,133 @@ add_boost_tree_h2o <- function() {
     mode = "regression",
     type = "numeric",
     value = list(
-      pre = NULL,
-      post = function(x, object) {
-        x$predict
-      },
-      func = c(fun = "h2o_pred"),
-      args =
-        list(
-          object = quote(object$fit),
-          newdata = quote(new_data)
-        )
+      pre = function(x, object) h2o::as.h2o(x),
+      post = function(x, object) as.data.frame(x)$predict,
+      func = c(pkg = "h2o", fun = "h2o.predict"),
+      args = list(
+        object = quote(object$fit),
+        newdata = quote(new_data)
+      )
     )
   )
-
   parsnip::set_pred(
     model = "boost_tree",
     eng = "h2o",
     mode = "regression",
     type = "raw",
     value = list(
-      pre = NULL,
-      post = function(x, object) {
-        x$predict
-      },
-      func = c(fun = "h2o_pred"),
+      pre = function(x, object) h2o::as.h2o(x),
+      post = function(x, object) as.data.frame(x),
+      func = c(pkg = "h2o", fun = "h2o.predict"),
       args = list(
         object = quote(object$fit),
-        newdata = quote(new_data))
+        newdata = quote(new_data)
+      )
     )
   )
 
+  # classification predict
   parsnip::set_pred(
     model = "boost_tree",
     eng = "h2o",
     mode = "classification",
     type = "class",
     value = list(
-      pre = NULL,
-      post = function(x, object) {
-        object$lvl[apply(x[, 2:ncol(x)], 1, which.max)]
-      },
-      func = c(fun = "h2o_pred"),
-      args =
-        list(
-          object = quote(object$fit),
-          newdata = quote(new_data)
-        )
+      pre = function(x, object) h2o::as.h2o(x),
+      post = function(x, object) as.data.frame(x)$predict,
+      func = c(pkg = "h2o", fun = "h2o.predict"),
+      args = list(
+        object = quote(object$fit),
+        newdata = quote(new_data)
+      )
     )
   )
-
   parsnip::set_pred(
     model = "boost_tree",
     eng = "h2o",
     mode = "classification",
     type = "prob",
     value = list(
-      pre = NULL,
-      post = function(x, object) {
-        x[, 2:ncol(x)]
-      },
-      func = c(fun = "h2o_pred"),
-      args =
-        list(
-          object = quote(object$fit),
-          newdata = quote(new_data)
-        )
+      pre = function(x, object) h2o::as.h2o(x),
+      post = function(x, object) as.data.frame(x[, 2:ncol(x)]),
+      func = c(pkg = "h2o", fun = "h2o.predict"),
+      args = list(
+        object = quote(object$fit),
+        newdata = quote(new_data)
+      )
     )
   )
-
   parsnip::set_pred(
     model = "boost_tree",
     eng = "h2o",
     mode = "classification",
     type = "raw",
     value = list(
-      pre = NULL,
-      post = NULL,
-      func = c(fun = "predict"),
+      pre = function(x, object) h2o::as.h2o(x),
+      post = function(x, object) as.data.frame(x),
+      func = c(pkg = "h2o", fun = "h2o.predict"),
       args = list(
         object = quote(object$fit),
         newdata = quote(new_data))
     )
   )
 }
+
+#' Wrapper for training a h2o.gbm model as part of a parsnip `boost_tree`
+#' h2o engine
+#'
+#' @param formula formula
+#' @param data data.frame of training data
+#' @param ntrees integer, the number of trees to build (default = 50)
+#' @param max_depth integer, the maximum tree depth (default = 10)
+#' @param min_rows integer, the minimum number of observations for a leaf
+#'   (default = 10)
+#' @param learn_rate numeric, the learning rate (default = 0.1, range is from
+#'   0.0 to 1.0)
+#' @param sample_rate numeric, the proportion of samples to use to build each
+#'   tree (default = 1.0)
+#' @param col_sample_rate numeric, the proportion of features available during
+#'   each node split (default = 1.0)
+#' @param min_split_improvement numeric,  minimum relative improvement in
+#'   squared error reduction in order for a split to happen (default = 1e-05)
+#' @param ... other arguments not currently used
+#'
+#' @return evaluated h2o model call
+#' @export
+h2o_gbm_train <-
+  function(formula,
+           data,
+           ntrees = 50,
+           max_depth = 5,
+           min_rows = 10,
+           learn_rate = 0.1,
+           sample_rate = 1.0,
+           col_sample_rate = 1.0,
+           min_split_improvement = 1e-05,
+           ...) {
+
+    # convert to H2OFrame, get response and predictor names
+    pre <- preprocess_training(formula, data)
+
+    # convert mtry (number of features) and min_rows to proportions
+    if (col_sample_rate > 1) {
+      col_sample_rate <- col_sample_rate / length(pre$X)
+    }
+
+    # define arguments
+    args <- list(
+      x = pre$X,
+      y = pre$y,
+      training_frame = pre$data,
+      ntrees = ntrees,
+      max_depth = max_depth,
+      min_rows = min_rows,
+      learn_rate = learn_rate,
+      sample_rate = sample_rate,
+      col_sample_rate = col_sample_rate,
+      min_split_improvement = min_split_improvement
+    )
+
+    others <- list(...)
+    make_h2o_call("h2o.gbm", args, others)
+  }
