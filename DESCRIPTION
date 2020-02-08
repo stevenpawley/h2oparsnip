@@ -8,7 +8,7 @@ Description: Bindings for additional models for use with the 'parsnip' package.
     Models include learning algorithms available is the R H2O
     package.
 License: MIT + file LICENSE
-URL: https://github.com/stevenpawley/waterparsnip
+URL: https://github.com/stevenpawley/h2oparsnip
 Suggests:
     testthat
 Encoding: UTF-8
@@ -18,6 +18,8 @@ Imports:
     tibble,
     magrittr,
     parsnip,
-    h2o
-BugReports: https://github.com/stevenpawley/waterparsnip/issues
+    h2o,
+    dials,
+    discrim
+BugReports: https://github.com/stevenpawley/h2oparsnip/issues
 RoxygenNote: 7.0.2

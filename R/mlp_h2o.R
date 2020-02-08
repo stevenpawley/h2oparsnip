@@ -199,28 +199,18 @@ h2o_mlp_train <-
       activation
     )
 
-    if (inherits(hidden_dropout_ratios, "character"))
-      hidden_dropout_ratios <- as.numeric(
-        str_split(hidden_dropout_ratios, ",", simplify = FALSE)[[1]]
-        )
-
-    if (activation == "Rectifier" & any(hidden_dropout_ratios > 0)) {
+    if (activation == "Rectifier" & hidden_dropout_ratios > 0) {
       activation <- "RectifierWithDropout"
 
-    } else if (activation == "Tanh" & any(hidden_dropout_ratios > 0)) {
+    } else if (activation == "Tanh" & hidden_dropout_ratios > 0) {
       activation <- "TanhWithDropout"
 
-    } else if (activation == "Maxout" & any(hidden_dropout_ratios > 0)) {
+    } else if (activation == "Maxout" & hidden_dropout_ratios > 0) {
       activation <- "MaxoutWithDropout"
     }
 
-    if (all(hidden_dropout_ratios == 0))
+    if (hidden_dropout_ratios == 0)
       hidden_dropout_ratios <- NULL
-
-    if (inherits(hidden, "character"))
-      hidden <- as.numeric(
-        str_split(hidden, ",", simplify = FALSE)[[1]]
-        )
 
     # define arguments
     args <- list(
