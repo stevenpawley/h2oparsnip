@@ -10,9 +10,9 @@ add_naive_Bayes_h2o <- function() {
   parsnip::set_model_arg(
     model = "naive_Bayes",
     eng = "h2o",
-    parsnip = "Laplace ",
+    parsnip = "Laplace",
     original = "laplace",
-    func = list(pkg = "dials", fun = "dropout"),
+    func = list(pkg = "dials", fun = "Laplace"),
     has_submodel = FALSE
   )
 
