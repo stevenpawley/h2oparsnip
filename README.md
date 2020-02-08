@@ -16,6 +16,7 @@ are implemented:
 - h2o.randomForest engine added to parsnip::rand_forest model specification
 - h2o.glm engine added to multinom_reg, logistic_reg and linear_reg model
 specifications
+- h2o.naiveBayes engine added to naive_Bayes specification (requires the discrim package)
 
 ## Installation
 
