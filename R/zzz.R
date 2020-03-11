@@ -7,5 +7,6 @@
   add_logistic_reg_h2o()
   add_linear_reg_h2o()
   add_naive_Bayes_h2o()
+  add_automl()
 }
 
