@@ -159,7 +159,7 @@ add_mlp_h2o <- function() {
 #' @param l2 numeric, l2 regulation parameter, default = 0
 #' @param hidden_dropout_ratios dropout ratio for a single hidden layer (default
 #'   = 0)
-#' @param hidden integer, number of neurons in the hidden layer (default = 200)
+#' @param hidden integer, number of neurons in the hidden layer (default = c(200, 200))
 #' @param epochs integer, number of epochs (default = 10)
 #' @param activation character, activation function. Must be one of: "Tanh",
 #'   "TanhWithDropout", "Rectifier", "RectifierWithDropout", "Maxout",
@@ -174,7 +174,7 @@ h2o_mlp_train <-
            data,
            l2 = 0,
            hidden_dropout_ratios = 0,
-           hidden = 200,
+           hidden = c(200, 200),
            epochs = 10,
            activation = "Rectifier",
            ...) {
