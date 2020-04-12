@@ -10,7 +10,7 @@ h2o_mlp_train(
   data,
   l2 = 0,
   hidden_dropout_ratios = 0,
-  hidden = 200,
+  hidden = c(200, 200),
   epochs = 10,
   activation = "Rectifier",
   ...
@@ -26,7 +26,7 @@ h2o_mlp_train(
 \item{hidden_dropout_ratios}{dropout ratio for a single hidden layer (default
 = 0)}
 
-\item{hidden}{integer, number of neurons in the hidden layer (default = 200)}
+\item{hidden}{integer, number of neurons in the hidden layer (default = c(200, 200))}
 
 \item{epochs}{integer, number of epochs (default = 10)}
 
