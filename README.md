@@ -17,6 +17,7 @@ are implemented:
 - h2o.glm engine added to multinom_reg, logistic_reg and linear_reg model
 specifications
 - h2o.naiveBayes engine added to naive_Bayes specification (requires the discrim package)
+- a new model, automl
 
 ## Installation
 
@@ -25,3 +26,7 @@ The package is not yet on CRAN and can be installed with:
 ``` r
 devtools::install_github("stevenpawley/h2oparsnip")
 ```
+
+## Needed
+
+Add multi_predict method for h2o.gbm using `h2o.staged_predict_proba`
