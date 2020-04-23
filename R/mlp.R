@@ -56,7 +56,9 @@ add_mlp_h2o <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_mlp_train"),
-      defaults = list()
+      defaults = list(
+        model_id = paste("mlp", as.integer(runif(1, 0, 1e9)), sep = "_")
+      )
     )
   )
   parsnip::set_fit(
@@ -67,7 +69,9 @@ add_mlp_h2o <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_mlp_train"),
-      defaults = list()
+      defaults = list(
+        model_id = paste("mlp", as.integer(runif(1, 0, 1e9)), sep = "_")
+      )
     )
   )
 
@@ -156,6 +160,8 @@ add_mlp_h2o <- function() {
 #'
 #' @param formula formula
 #' @param data data.frame of training data
+#' @param model_id A randomly assigned identifier for the model. Used to refer
+#'   to the model within the h2o cluster.
 #' @param l2 numeric, l2 regulation parameter, default = 0
 #' @param hidden_dropout_ratios dropout ratio for a single hidden layer (default
 #'   = 0)
@@ -172,12 +178,15 @@ add_mlp_h2o <- function() {
 h2o_mlp_train <-
   function(formula,
            data,
+           model_id,
            l2 = 0,
            hidden_dropout_ratios = 0,
            hidden = c(200, 200),
            epochs = 10,
            activation = "Rectifier",
            ...) {
+
+    others <- list(...)
 
     # convert to H2OFrame, get response and predictor names
     pre <- preprocess_training(formula, data)
@@ -214,6 +223,7 @@ h2o_mlp_train <-
 
     # define arguments
     args <- list(
+      model_id = model_id,
       x = pre$X,
       y = pre$y,
       training_frame = pre$data,
@@ -224,6 +234,5 @@ h2o_mlp_train <-
       activation = activation
     )
 
-    others <- list(...)
     make_h2o_call("h2o.deeplearning", args, others)
   }

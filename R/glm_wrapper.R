@@ -2,6 +2,8 @@
 #'
 #' @param formula formula
 #' @param data data.frame of training data
+#' @param model_id A randomly assigned identifier for the model. Used to refer
+#'   to the model within the h2o cluster.
 #' @param alpha numeric, Distribution of regularization between the L1 (Lasso)
 #'   and L2 (Ridge) penalties. A value of 1 for alpha represents Lasso
 #'   regression, a value of 0 produces Ridge regression.
@@ -16,16 +18,20 @@
 h2o_glm_train <-
   function(formula,
            data,
+           model_id,
            alpha = NULL,
            lambda = NULL,
            family = NULL,
            ...) {
+
+    others <- list(...)
 
     # convert to H2OFrame, get response and predictor names
     pre <- preprocess_training(formula, data)
 
     # define arguments
     args <- list(
+      model_id = model_id,
       x = pre$X,
       y = pre$y,
       training_frame = pre$data,
@@ -34,6 +40,5 @@ h2o_glm_train <-
       family = family
     )
 
-    others <- list(...)
     make_h2o_call("h2o.glm", args, others)
   }

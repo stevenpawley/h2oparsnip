@@ -1,15 +1,15 @@
-#' Wrapper to add the `h2o` engine to the parsnip `multinom_reg` model
+#' Wrapper to add the `h2o` engine to the parsnip `logistic_reg` model
 #' specification
 #'
 #' @return NULL
 #' @export
-add_multinom_reg_h2o <- function() {
+add_logistic_reg_h2o <- function() {
 
-  parsnip::set_model_engine("multinom_reg", "classification", "h2o")
-  parsnip::set_dependency("multinom_reg", "h2o", "h2o")
+  parsnip::set_model_engine("logistic_reg", "classification", "h2o")
+  parsnip::set_dependency("logistic_reg", "h2o", "h2o")
 
   parsnip::set_model_arg(
-    model = "multinom_reg",
+    model = "logistic_reg",
     eng = "h2o",
     parsnip = "mixture",
     original = "alpha",
@@ -17,7 +17,7 @@ add_multinom_reg_h2o <- function() {
     has_submodel = FALSE
   )
   parsnip::set_model_arg(
-    model = "multinom_reg",
+    model = "logistic_reg",
     eng = "h2o",
     parsnip = "penalty",
     original = "lambda",
@@ -25,20 +25,23 @@ add_multinom_reg_h2o <- function() {
     has_submodel = FALSE
   )
   parsnip::set_fit(
-    model = "multinom_reg",
+    model = "logistic_reg",
     eng = "h2o",
     mode = "classification",
     value = list(
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame", "family"),
       func = c(fun = "h2o_glm_train"),
-      defaults = list(family = "multinomial")
+      defaults = list(
+        family = "binomial",
+        model_id = paste("logistic_reg", as.integer(runif(1, 0, 1e9)), sep = "_")
+      )
     )
   )
 
   # classification predict
   parsnip::set_pred(
-    model = "multinom_reg",
+    model = "logistic_reg",
     eng = "h2o",
     mode = "classification",
     type = "class",
@@ -53,7 +56,7 @@ add_multinom_reg_h2o <- function() {
     )
   )
   parsnip::set_pred(
-    model = "multinom_reg",
+    model = "logistic_reg",
     eng = "h2o",
     mode = "classification",
     type = "prob",
@@ -68,7 +71,7 @@ add_multinom_reg_h2o <- function() {
     )
   )
   parsnip::set_pred(
-    model = "multinom_reg",
+    model = "logistic_reg",
     eng = "h2o",
     mode = "classification",
     type = "raw",
