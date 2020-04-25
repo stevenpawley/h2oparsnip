@@ -241,64 +241,13 @@ h2o_gbm_train <-
   }
 
 
-#' Multi_predict method for h2o gbm classification models
-#'
-#' @param object A `model_spec` object.
-#' @param new_data A data.frame of new observations.
-#' @param type A single character vector of "class" or "prob".
-#' @param trees An integer vector with the number of trees in the ensemble.
-#' @param ... Other arguments currently unused.
-#'
-#' @return
-#' @export
-multi_predict._H2OMultinomialModel <-
-  function(object, new_data, type = "class", trees, ...) {
-    if (any(names(enquos(...)) == "newdata"))
-      rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
-
-    trees <- sort(trees)
-    names(trees) <- trees
-
-    res <- gbm_multi_predict(object, new_data, type, trees)
-    res <- bind_rows(res)
-    res <- arrange(res, .row, trees)
-    res <- split(res[, -ncol(res)], res$.row)
-    tibble(.pred = res)
-  }
-
-
-#' Multi_predict method for h2o gbm regression models
-#'
-#' @param object A `model_spec` object.
-#' @param new_data A data.frame of new observations.
-#' @param type A single character vector, must be "numeric".
-#' @param trees An integer vector with the number of trees in the ensemble.
-#' @param ... Other arguments currently unused.
-#'
-#' @return
-#' @export
-multi_predict._H2ORegressionModel <-
-  function(object, new_data, type = "numeric", trees, ...) {
-    if (any(names(enquos(...)) == "newdata"))
-      rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
-
-    trees <- sort(trees)
-    names(trees) <- trees
-
-    res <- gbm_multi_predict(object, new_data, type, trees)
-    res <- bind_rows(res)
-    res <- arrange(res, .row, trees)
-    res <- split(res[, -ncol(res)], res$.row)
-    tibble(.pred = res)
-  }
-
-
 gbm_multi_predict <- function(object, new_data, type, trees) {
+
+  trees <- sort(trees)
 
   preds <- h2o::staged_predict_proba.H2OModel(
     object = object$fit,
-    newdata = h2o::as.h2o(new_data),
-    ntrees = tree
+    newdata = h2o::as.h2o(new_data)
   )
   preds <- as.data.frame(preds)
 
@@ -341,5 +290,9 @@ gbm_multi_predict <- function(object, new_data, type, trees) {
       mutate(.row = 1:max(row_number()))
   }
 
-  res
+  res <- bind_rows(res)
+  res <- arrange(res, .row, trees)
+  res <- split(res[, -ncol(res)], res$.row)
+
+  tibble(.pred = res)
 }

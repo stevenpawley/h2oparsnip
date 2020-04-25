@@ -38,7 +38,7 @@ add_mlp_h2o <- function() {
     parsnip = "epochs",
     original = "epochs",
     func = list(pkg = "dials", fun = "epochs"),
-    has_submodel = FALSE
+    has_submodel = TRUE
   )
   parsnip::set_model_arg(
     model = "mlp",
@@ -181,7 +181,7 @@ h2o_mlp_train <-
            model_id,
            l2 = 0,
            hidden_dropout_ratios = 0,
-           hidden = c(200, 200),
+           hidden = 100,
            epochs = 10,
            activation = "Rectifier",
            ...) {
@@ -236,7 +236,83 @@ h2o_mlp_train <-
     )
 
     res <- make_h2o_call("h2o.deeplearning", args, others)
-    h2o::h2o.rm(dest_frame)
+    # h2o::h2o.rm(dest_frame)
 
+    if (!"l2" %in% names(res@parameters)) {
+      res@parameters$l2 <- l2
+    }
+
+    if (!"hidden_dropout_ratios" %in% names(res@parameters)) {
+      res@parameters$hidden_dropout_ratios <- hidden_dropout_ratios
+    }
+
+    if (!"activation" %in% names(res@parameters)) {
+      res@parameters$activation <- activation
+    }
+
+    if (!"hidden" %in% names(res@parameters)) {
+      res@parameters$hidden <- hidden
+    }
     res
   }
+
+
+mlp_multi_predict <- function(object, new_data, type, epochs) {
+
+  epochs <- sort(epochs)
+  new_data <- h2o::as.h2o(new_data)
+
+  preds <- map(epochs, function(epoch) {
+    model <- h2o::h2o.deeplearning(
+      x = object$fit@parameters$x,
+      y = object$fit@parameters$y,
+      training_frame = object$fit@parameters$training_frame,
+      checkpoint = object$fit@model_id,
+      epochs = epoch,
+      hidden = object$fit@parameters$hidden,
+      l2 = object$fit@parameters$l2,
+      hidden_dropout_ratios = object$fit@parameters$hidden_dropout_ratios,
+      activation = object$fit@parameters$activation
+    )
+
+    predict(model, new_data) %>% as.data.frame()
+  })
+
+  # prepare predictions in parsnip format
+  if (type == "class") {
+    res <- map2(
+      preds, epochs, ~ select(.x, predict) %>%
+        rename(.pred_class = predict) %>%
+        mutate(
+          epochs = .y,
+          .pred_class = factor(.pred_class, levels = object$lvl),
+          .row = 1:max(row_number())
+        )
+    )
+
+  } else if (type == "prob") {
+    new_names <- object$lvl
+    names(new_names) <- paste(".pred", object$lvl, sep = "_")
+
+    res <- map2(
+      preds, epochs, ~ select(.x, !!!object$lvl) %>%
+        rename(!!!new_names) %>%
+        mutate(
+          epochs = .y,
+          .row = 1:max(row_number())
+        )
+    )
+
+  } else if (type == "numeric") {
+    res <- map2(preds, epochs, function(x, epoch)
+      tibble(epochs = epoch, .pred = x$predict))
+    res <- map(res, ~ mutate(.x, .row = 1:max(row_number())))
+  }
+
+
+  res <- bind_rows(res)
+  res <- arrange(res, .row, epochs)
+  res <- split(res[, -ncol(res)], res$.row)
+
+  tibble(.pred = res)
+}
