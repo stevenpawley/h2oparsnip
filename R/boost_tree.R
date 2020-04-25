@@ -241,13 +241,6 @@ h2o_gbm_train <-
   }
 
 
-get_probs <- function(class_n, tree, preds) {
-  pred_names <- names(preds)
-  class_n_res <- preds[, stringr::str_detect(pred_names, paste0("C", class_n))]
-  class_n_res[, tree]
-}
-
-
 #' Multi_predict method for h2o gbm classification models
 #'
 #' @param object A `model_spec` object.
@@ -266,7 +259,8 @@ multi_predict._H2OMultinomialModel <-
     trees <- sort(trees)
     names(trees) <- trees
 
-    res <- map_df(trees, gbm_multi_predict, object = object, new_data = new_data, type = type)
+    res <- gbm_multi_predict(object, new_data, type, trees)
+    res <- bind_rows(res)
     res <- arrange(res, .row, trees)
     res <- split(res[, -ncol(res)], res$.row)
     tibble(.pred = res)
@@ -291,14 +285,15 @@ multi_predict._H2ORegressionModel <-
     trees <- sort(trees)
     names(trees) <- trees
 
-    res <- map_df(trees, gbm_multi_predict, object = object, new_data = new_data, type = type)
+    res <- gbm_multi_predict(object, new_data, type, trees)
+    res <- bind_rows(res)
     res <- arrange(res, .row, trees)
     res <- split(res[, -ncol(res)], res$.row)
     tibble(.pred = res)
   }
 
 
-gbm_multi_predict <- function(tree, object, new_data, type) {
+gbm_multi_predict <- function(object, new_data, type, trees) {
 
   preds <- h2o::staged_predict_proba.H2OModel(
     object = object$fit,
@@ -310,34 +305,41 @@ gbm_multi_predict <- function(tree, object, new_data, type) {
   if (type %in% c("class", "prob")) {
     n_classes <- length(object$lvl)
 
-    preds <- sapply(seq_len(n_classes), get_probs, tree, preds)
-    colnames(preds) <- object$lvl
-    preds <- as.data.frame(preds)
-    preds$predict <- object$lvl[apply(preds, 1, which.max)]
-    preds$trees <- tree
+    res <- map(trees, function(tree) {
+      pred_class_names <- paste0("C", seq_len(n_classes))
+      tree_names <- paste0("T", tree)
+      x <- preds[, paste(tree_names, pred_class_names, sep = ".")]
+      colnames(x) <- object$lvl
+      x <- as.data.frame(x)
+      x$predict <- object$lvl[apply(x, 1, which.max)]
+      x$trees <- tree
+      x
+    })
 
   } else if (type == "numeric") {
-    preds <- preds[, tree]
-    preds <- tibble(predict = preds, trees = tree)
+    res <- map(trees, function(tree) tibble(trees = tree, .pred = preds[, tree]))
   }
 
   # prepare predictions in parsnip format
   if (type == "class") {
-    preds <- select(preds, trees, predict)
-    preds <- rename(preds, .pred_class = "predict")
-    preds$.pred_class <- factor(preds$.pred_class, levels = object$lvl)
+    res <- map(
+      res, ~ select(.x, trees, predict) %>%
+        rename(.pred_class = predict) %>%
+        mutate(
+          .pred_class = factor(.pred_class, levels = object$lvl),
+          .row = 1:max(row_number())
+        )
+    )
 
   } else if (type == "numeric") {
-    preds <- select(preds, trees, predict)
-    preds <- rename(preds, .pred = "predict")
+    res <- map(res, ~ mutate(.x, .row = 1:max(row_number())))
 
   } else if (type == "prob") {
-    preds <- select(preds, trees, !!!object$lvl)
     new_names <- object$lvl
     names(new_names) <- paste(".pred", object$lvl, sep = "_")
-    preds <- rename(preds, !!new_names)
+    res <- map(res, ~ select(.x, trees,!!!object$lvl) %>% rename(!!new_names)) %>%
+      mutate(.row = 1:max(row_number()))
   }
 
-  preds$.row <- 1:nrow(preds)
-  preds
+  res
 }
