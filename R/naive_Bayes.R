@@ -101,7 +101,8 @@ h2o_naiveBayes_train <-
     others <- list(...)
 
     # convert to H2OFrame, get response and predictor names
-    pre <- preprocess_training(formula, data)
+    dest_frame <- paste("training_data", model_id, sep = "_")
+    pre <- preprocess_training(formula, data, dest_frame)
 
     # check arguments
     if (laplace < 0)
@@ -116,5 +117,8 @@ h2o_naiveBayes_train <-
       laplace = laplace
     )
 
-    make_h2o_call("h2o.naiveBayes", args, others)
+    res <- make_h2o_call("h2o.naiveBayes", args, others)
+    h2o::h2o.rm(dest_frame)
+
+    res
   }

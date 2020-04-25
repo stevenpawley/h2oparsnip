@@ -15,7 +15,7 @@ add_boost_tree_h2o <- function() {
     parsnip = "trees",
     original = "ntrees",
     func = list(pkg = "dials", fun = "trees"),
-    has_submodel = FALSE
+    has_submodel = TRUE
   )
   parsnip::set_model_arg(
     model = "boost_tree",
@@ -169,6 +169,7 @@ add_boost_tree_h2o <- function() {
         newdata = quote(new_data))
     )
   )
+
 }
 
 #' Wrapper for training a h2o.gbm model as part of a parsnip `boost_tree`
@@ -210,9 +211,10 @@ h2o_gbm_train <-
     others <- list(...)
 
     # convert to H2OFrame, get response and predictor names
-    pre <- preprocess_training(formula, data)
+    dest_frame <- paste("training_data", model_id, sep = "_")
+    pre <- preprocess_training(formula, data, dest_frame)
 
-    # convert mtry (number of features) and min_rows to proportions
+    # convert mtry (number of features) to proportions
     if (col_sample_rate > 1) {
       col_sample_rate <- col_sample_rate / length(pre$X)
     }
@@ -232,35 +234,110 @@ h2o_gbm_train <-
       min_split_improvement = min_split_improvement
     )
 
-    make_h2o_call("h2o.gbm", args, others)
+    res <- make_h2o_call("h2o.gbm", args, others)
+    # h2o::h2o.rm(dest_frame)
+
+    res
+  }
+
+
+get_probs <- function(class_n, tree, preds) {
+  pred_names <- names(preds)
+  class_n_res <- preds[, stringr::str_detect(pred_names, paste0("C", class_n))]
+  class_n_res[, tree]
 }
 
 
-#' #' [multi_predict()] methods for h2o gbm models
-#' #' @rdname multi_predict
-#' #' @export
-#' #' @param ntrees A numeric vector for the number of trees.
-#' multi_predict._H2OMultinomialModel <-
-#'   function(object, new_data, type = NULL, neighbors = NULL, ...) {
+#' Multi_predict method for h2o gbm classification models
 #'
-#'     if (any(names(enquos(...)) == "newdata")) {
-#'       rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
-#'     }
+#' @param object A `model_spec` object.
+#' @param new_data A data.frame of new observations.
+#' @param type A single character vector of "class" or "prob".
+#' @param trees An integer vector with the number of trees in the ensemble.
+#' @param ... Other arguments currently unused.
 #'
-#'     model_id <- object$spec$eng_args$model_id
+#' @return
+#' @export
+multi_predict._H2OMultinomialModel <-
+  function(object, new_data, type = "class", trees, ...) {
+    if (any(names(enquos(...)) == "newdata"))
+      rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
+
+    trees <- sort(trees)
+    names(trees) <- trees
+
+    res <- map_df(trees, gbm_multi_predict, object = object, new_data = new_data, type = type)
+    res <- arrange(res, .row, trees)
+    res <- split(res[, -ncol(res)], res$.row)
+    tibble(.pred = res)
+  }
+
+
+#' Multi_predict method for h2o gbm regression models
 #'
-#'     dl_checkpoint1 <- h2o.gbm(
-#'       model_id = object$model_id,
-#'       x = predictors,
-#'       y = target,
-#'       training_frame = train,
-#'       checkpoint = 'dl',
-#'       validation_frame = valid,
-#'       distribution = 'multinomial',
-#'       epochs = 20,
-#'       activation = 'RectifierWithDropout',
-#'       hidden_dropout_ratios = c(0, 0.5),
-#'       seed = 1234
-#'     )
+#' @param object A `model_spec` object.
+#' @param new_data A data.frame of new observations.
+#' @param type A single character vector, must be "numeric".
+#' @param trees An integer vector with the number of trees in the ensemble.
+#' @param ... Other arguments currently unused.
 #'
-#'   }
+#' @return
+#' @export
+multi_predict._H2ORegressionModel <-
+  function(object, new_data, type = "numeric", trees, ...) {
+    if (any(names(enquos(...)) == "newdata"))
+      rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
+
+    trees <- sort(trees)
+    names(trees) <- trees
+
+    res <- map_df(trees, gbm_multi_predict, object = object, new_data = new_data, type = type)
+    res <- arrange(res, .row, trees)
+    res <- split(res[, -ncol(res)], res$.row)
+    tibble(.pred = res)
+  }
+
+
+gbm_multi_predict <- function(tree, object, new_data, type) {
+
+  preds <- h2o::staged_predict_proba.H2OModel(
+    object = object$fit,
+    newdata = h2o::as.h2o(new_data),
+    ntrees = tree
+  )
+  preds <- as.data.frame(preds)
+
+  if (type %in% c("class", "prob")) {
+    n_classes <- length(object$lvl)
+
+    preds <- sapply(seq_len(n_classes), get_probs, tree, preds)
+    colnames(preds) <- object$lvl
+    preds <- as.data.frame(preds)
+    preds$predict <- object$lvl[apply(preds, 1, which.max)]
+    preds$trees <- tree
+
+  } else if (type == "numeric") {
+    preds <- preds[, tree]
+    preds <- tibble(predict = preds, trees = tree)
+  }
+
+  # prepare predictions in parsnip format
+  if (type == "class") {
+    preds <- select(preds, trees, predict)
+    preds <- rename(preds, .pred_class = "predict")
+    preds$.pred_class <- factor(preds$.pred_class, levels = object$lvl)
+
+  } else if (type == "numeric") {
+    preds <- select(preds, trees, predict)
+    preds <- rename(preds, .pred = "predict")
+
+  } else if (type == "prob") {
+    preds <- select(preds, trees, !!!object$lvl)
+    new_names <- object$lvl
+    names(new_names) <- paste(".pred", object$lvl, sep = "_")
+    preds <- rename(preds, !!new_names)
+  }
+
+  preds$.row <- 1:nrow(preds)
+  preds
+}

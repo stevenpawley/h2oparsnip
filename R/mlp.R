@@ -189,7 +189,8 @@ h2o_mlp_train <-
     others <- list(...)
 
     # convert to H2OFrame, get response and predictor names
-    pre <- preprocess_training(formula, data)
+    dest_frame <- paste("training_data", model_id, sep = "_")
+    pre <- preprocess_training(formula, data, dest_frame)
 
     # remap dials::values_activation to permissible h2o activation values
     if (activation %in% c("linear", "elu", "softmax")) {
@@ -234,5 +235,8 @@ h2o_mlp_train <-
       activation = activation
     )
 
-    make_h2o_call("h2o.deeplearning", args, others)
+    res <- make_h2o_call("h2o.deeplearning", args, others)
+    h2o::h2o.rm(dest_frame)
+
+    res
   }

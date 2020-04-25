@@ -4,15 +4,17 @@
 \alias{preprocess_training}
 \title{Preprocess training data for use with h2o models}
 \usage{
-preprocess_training(formula, data)
+preprocess_training(formula, data, dest_frame)
 }
 \arguments{
-\item{formula}{formula object}
+\item{formula}{formula object.}
 
-\item{data}{data.frame of predictors and response variable}
+\item{data}{data.frame of predictors and response variable.}
+
+\item{dest_frame}{An identifier for the H2OFrame.}
 }
 \value{
-list(data = H2OFrame, X = predictor names, y = response name)
+list(data = H2OFrame, X = predictor names, y = response name).
 }
 \description{
 Preprocess training data for use with h2o models

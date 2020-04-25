@@ -169,7 +169,8 @@ h2o_automl_train <- function(formula, data, model_id, ...) {
   others <- list(...)
 
   # convert to a H2OFrame and split response and predictor names
-  pre <- preprocess_training(formula, data)
+  dest_frame <- paste("training_data", model_id, sep = "_")
+  pre <- preprocess_training(formula, data, dest_frame)
 
   # define arguments
   args <- list(
@@ -180,6 +181,9 @@ h2o_automl_train <- function(formula, data, model_id, ...) {
   )
 
   others <- list(...)
-  make_h2o_call("h2o.automl", args, others)
+  res <- make_h2o_call("h2o.automl", args, others)
+  h2o::h2o.rm(dest_frame)
+
+  res
 }
 

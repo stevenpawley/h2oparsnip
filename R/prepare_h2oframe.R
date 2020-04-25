@@ -26,18 +26,19 @@ extract_terms <- function(formula, data) {
 
 #' Preprocess training data for use with h2o models
 #'
-#' @param formula formula object
-#' @param data data.frame of predictors and response variable
+#' @param formula formula object.
+#' @param data data.frame of predictors and response variable.
+#' @param dest_frame An identifier for the H2OFrame.
 #'
-#' @return list(data = H2OFrame, X = predictor names, y = response name)
+#' @return list(data = H2OFrame, X = predictor names, y = response name).
 #' @export
-preprocess_training <- function(formula, data) {
+preprocess_training <- function(formula, data, dest_frame) {
 
   X <- extract_terms(formula, data)$X
   y <- extract_terms(formula, data)$y
 
   if (!inherits(data, "H2OFrame"))
-    data <- h2o::as.h2o(data)
+    data <- h2o::as.h2o(data, dest_frame)
 
   list(
     data = data,
