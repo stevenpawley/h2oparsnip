@@ -1,3 +1,4 @@
+# min grid for mlp -------------------------------------------------------------
 submodel_mlp <- function (grid) {
   if (nrow(grid) == 1) {
     grid$.submodels <- list(list())
