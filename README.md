@@ -29,7 +29,9 @@ devtools::install_github("stevenpawley/h2oparsnip")
 
 ## Notes
 
-The package currently is based on the concept of using h2o purely as a disposable backend, i.e. the user is working with R objects and just uses h2o for supervised machine learning. However, if the h2o cluster is running on a remote server, this is less efficient because data is being sent back and forth.
+The package currently is based on the concept of using h2o as a disposable backend, using h2o as a drop-in replacement for the traditionally used 'engines' within the parsnip package. However, performing tasks such as hyperparameter tuning via the 'tune' packge will be less efficient if working on a remote cluster than using h2o directly because data is being sent back and forth.
+
+h2oparsnip also does not provide any management of the h2o cluster. If lots of models are being run then available memory within the cluster may be exhausted. Currently this has to be managed using the commands in the h2o package.
 
 ## Basic Usage
 
