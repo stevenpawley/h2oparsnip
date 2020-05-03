@@ -118,7 +118,6 @@ h2o_naiveBayes_train <-
     )
 
     res <- make_h2o_call("h2o.naiveBayes", args, others)
-    h2o::h2o.rm(dest_frame)
 
     res
   }

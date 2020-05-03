@@ -42,7 +42,18 @@ h2o_glm_train <-
     )
 
     res <- make_h2o_call("h2o.glm", args, others)
-    h2o::h2o.rm(dest_frame)
+
+    if (!"alpha" %in% names(res@parameters)) {
+      res@parameters$alpha <- alpha
+    }
+
+    if (!"lambda" %in% names(res@parameters)) {
+      res@parameters$lambda <- lambda
+    }
+
+    if (!"family" %in% names(res@parameters)) {
+      res@parameters$family <- family
+    }
 
     res
   }

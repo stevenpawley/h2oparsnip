@@ -174,7 +174,6 @@ h2o_automl_train <- function(formula, data, model_id, ...) {
 
   # define arguments
   args <- list(
-    model_id = model_id,
     x = pre$X,
     y = pre$y,
     training_frame = pre$data
@@ -182,7 +181,6 @@ h2o_automl_train <- function(formula, data, model_id, ...) {
 
   others <- list(...)
   res <- make_h2o_call("h2o.automl", args, others)
-  h2o::h2o.rm(dest_frame)
 
   res
 }

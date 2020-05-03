@@ -183,7 +183,6 @@ h2o_rf_train <-
     )
 
     res <- make_h2o_call("h2o.randomForest", args, others)
-    h2o::h2o.rm(dest_frame)
 
     res
   }

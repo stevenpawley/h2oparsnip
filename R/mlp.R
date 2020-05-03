@@ -236,7 +236,6 @@ h2o_mlp_train <-
     )
 
     res <- make_h2o_call("h2o.deeplearning", args, others)
-    # h2o::h2o.rm(dest_frame)
 
     if (!"l2" %in% names(res@parameters)) {
       res@parameters$l2 <- l2

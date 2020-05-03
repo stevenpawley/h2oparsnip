@@ -235,7 +235,6 @@ h2o_gbm_train <-
     )
 
     res <- make_h2o_call("h2o.gbm", args, others)
-    h2o::h2o.rm(dest_frame)
 
     res
   }
