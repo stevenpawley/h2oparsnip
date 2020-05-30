@@ -5,7 +5,7 @@
 \title{Reads an H2O model from file and inserts it back into a previously fitted
 parsnip model specification or workflow object}
 \usage{
-read_h2o(object, filename)
+read_h2o(object, filename, ...)
 }
 \arguments{
 \item{object}{Either a `workflows::workflow()` object contained a fitted

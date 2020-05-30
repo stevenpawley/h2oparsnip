@@ -121,3 +121,20 @@ test_that('mlp h2o automatic use of activation function with dropout', {
   expect_equal(clf_preds[[1]], h2o_clf_preds$predict)
 
 })
+
+
+test_that("mlp h2o multi_predict", {
+  mlp_clf <- mlp(mode = "classification", hidden_units = 100, epochs = 100) %>%
+    set_engine("h2o", seed = 1234, reproducible = TRUE)
+
+  fitted_clf <- mlp_clf %>% fit(Species ~., iris_df)
+
+  expect_true(parsnip::has_multi_predict(fitted_clf))
+  expect_equal(parsnip::multi_predict_args(fitted_clf), "epochs")
+
+  expect_equal(
+    nrow(multi_predict(fitted_clf, iris_df, type = "class", epochs = 200)),
+    150
+  )
+})
+

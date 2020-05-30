@@ -11,7 +11,7 @@ h2o_mlp_train(
   model_id,
   l2 = 0,
   hidden_dropout_ratios = 0,
-  hidden = c(200, 200),
+  hidden = 100,
   epochs = 10,
   activation = "Rectifier",
   ...

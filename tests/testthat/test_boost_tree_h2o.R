@@ -82,3 +82,26 @@ test_that('boost_tree h2o formula method', {
   expect_equal(h2o_regr_preds$predict, regr_preds$.pred)
 })
 
+test_that("boost_tree h2o multi_predict", {
+  clf <-
+    boost_tree(
+      mode = "classification",
+      trees = 50,
+      tree_depth = 10,
+      min_n = 1,
+      learn_rate = 0.1,
+      sample_size = 0.8,
+      mtry = 0.3
+    ) %>%
+    set_engine("h2o", seed = 1234)
+
+  fitted_clf <- clf %>% fit(Species ~., iris_df)
+
+  expect_true(parsnip::has_multi_predict(fitted_clf))
+  expect_equal(parsnip::multi_predict_args(fitted_clf), "trees")
+
+  expect_equal(
+    nrow(multi_predict(fitted_clf, iris_df, type = "class", trees = 10)),
+    150
+  )
+})

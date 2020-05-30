@@ -102,7 +102,7 @@ write_h2o <- function(object, filename) {
 #'
 #' # read and insert the H2O model back into the parsnip object
 #' model_fit <- read_h2o(model_fit, file.path(tempdir(), "my_h2o_model.mod"))
-read_h2o <- function(object, filename) {
+read_h2o <- function(object, filename, ...) {
   UseMethod("read_h2o", object)
 }
 
