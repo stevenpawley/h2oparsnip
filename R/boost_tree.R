@@ -69,7 +69,7 @@ add_boost_tree_h2o <- function() {
     model = "boost_tree",
     eng = "h2o",
     parsnip = "stop_iter",
-    original = "early_stop",
+    original = "stopping_rounds",
     func = list(pkg = "dials", fun = "stop_iter"),
     has_submodel = FALSE
   )
@@ -199,10 +199,11 @@ add_boost_tree_h2o <- function() {
 #'   each node split (default = 1.0).
 #' @param min_split_improvement numeric,  minimum relative improvement in
 #'   squared error reduction in order for a split to happen (default = 1e-05)
-#' @param early_stop An integer or `NULL`. If not `NULL`, it is the number of
-#' training iterations without improvement before stopping. If `validation` is
-#' used, performance is base on the validation set; otherwise the training set
-#' is used.
+#' @param stopping_rounds An integer specifying the number of training
+#'   iterations without improvement before stopping. If `stopping_rounds = 0`
+#'   (the default) then early stopping is disabled.  If `validation` is used,
+#'   performance is base on the validation set; otherwise the training set is
+#'   used.
 #' @param validation A positive number. If on `[0, 1)` the value, `validation`
 #' is a random proportion of data in `x` and `y` that are used for performance
 #' assessment and potential early stopping. If 1 or greater, it is the _number_
@@ -222,14 +223,14 @@ h2o_gbm_train <-
            sample_rate = 1.0,
            col_sample_rate = 1.0,
            min_split_improvement = 1e-05,
-           early_stop = NULL,
-           validation = 0.1,
+           stopping_rounds = 0,
+           validation = 0,
            ...) {
 
     others <- list(...)
 
     # early stopping
-    if (early_stop) {
+    if (stopping_rounds > 0 & validation > 0) {
       n <- nrow(data)
       trn_index <- sample(1:n, size = floor(n * validation) + 1)
       valid <- h2o::as.h2o(data[-trn_index, ])
@@ -261,7 +262,7 @@ h2o_gbm_train <-
       sample_rate = sample_rate,
       col_sample_rate = col_sample_rate,
       min_split_improvement = min_split_improvement,
-      stopping_rounds = early_stop
+      stopping_rounds = stopping_rounds
     )
 
     res <- make_h2o_call("h2o.gbm", args, others)

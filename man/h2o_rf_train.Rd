@@ -12,6 +12,8 @@ h2o_rf_train(
   ntrees = 50,
   min_rows = 10,
   mtries = -1,
+  stopping_rounds = 0,
+  validation = 0,
   ...
 )
 }
@@ -30,6 +32,17 @@ to the model within the h2o cluster.}
 
 \item{mtries}{integer, the number of columns to randomly select at each
 level. Default of -1 is sqrt(p) for classification and (p/3) for regression.}
+
+\item{stopping_rounds}{An integer specifying the number of training
+iterations without improvement before stopping. If `stopping_rounds = 0`
+(the default) then early stopping is disabled.  If `validation` is used,
+performance is base on the validation set; otherwise the training set is
+used.}
+
+\item{validation}{A positive number. If on `[0, 1)` the value, `validation`
+is a random proportion of data in `x` and `y` that are used for performance
+assessment and potential early stopping. If 1 or greater, it is the _number_
+of training set samples use for these purposes.}
 
 \item{...}{other arguments not currently used}
 }

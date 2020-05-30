@@ -16,8 +16,8 @@ h2o_gbm_train(
   sample_rate = 1,
   col_sample_rate = 1,
   min_split_improvement = 1e-05,
-  early_stop = NULL,
-  validation = 0.1,
+  stopping_rounds = 0,
+  validation = 0,
   ...
 )
 }
@@ -48,10 +48,11 @@ each node split (default = 1.0).}
 \item{min_split_improvement}{numeric,  minimum relative improvement in
 squared error reduction in order for a split to happen (default = 1e-05)}
 
-\item{early_stop}{An integer or `NULL`. If not `NULL`, it is the number of
-training iterations without improvement before stopping. If `validation` is
-used, performance is base on the validation set; otherwise the training set
-is used.}
+\item{stopping_rounds}{An integer specifying the number of training
+iterations without improvement before stopping. If `stopping_rounds = 0`
+(the default) then early stopping is disabled.  If `validation` is used,
+performance is base on the validation set; otherwise the training set is
+used.}
 
 \item{validation}{A positive number. If on `[0, 1)` the value, `validation`
 is a random proportion of data in `x` and `y` that are used for performance

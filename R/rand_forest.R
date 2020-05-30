@@ -152,6 +152,15 @@ add_rand_forest_h2o <- function() {
 #'   (default = 10)
 #' @param mtries integer, the number of columns to randomly select at each
 #' level. Default of -1 is sqrt(p) for classification and (p/3) for regression.
+#' @param stopping_rounds An integer specifying the number of training
+#'   iterations without improvement before stopping. If `stopping_rounds = 0`
+#'   (the default) then early stopping is disabled.  If `validation` is used,
+#'   performance is base on the validation set; otherwise the training set is
+#'   used.
+#' @param validation A positive number. If on `[0, 1)` the value, `validation`
+#' is a random proportion of data in `x` and `y` that are used for performance
+#' assessment and potential early stopping. If 1 or greater, it is the _number_
+#' of training set samples use for these purposes.
 #' @param ... other arguments not currently used
 #'
 #' @return evaluated h2o model call
@@ -163,21 +172,16 @@ h2o_rf_train <-
            ntrees = 50,
            min_rows = 10,
            mtries = -1,
+           stopping_rounds = 0,
+           validation = 0,
            ...) {
 
     others <- list(...)
 
     # early stopping
-    if ("stopping_rounds" %in% names(others)) {
-      stopping_rounds <- others$stopping_rounds
-    } else {
-      stopping_rounds <- 0
-    }
-
-    if (stopping_rounds != 0) {
+    if (stopping_rounds > 0 & validation > 0) {
       n <- nrow(data)
-      valid_fraction <- 0.1
-      trn_index <- sample(1:n, size = floor(n * valid_fraction) + 1)
+      trn_index <- sample(1:n, size = floor(n * validation) + 1)
       valid <- h2o::as.h2o(data[-trn_index, ])
       data <- data[trn_index, ]
     } else {
