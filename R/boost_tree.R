@@ -65,6 +65,14 @@ add_boost_tree_h2o <- function() {
     func = list(pkg = "dials", fun = "loss_reduction"),
     has_submodel = FALSE
   )
+  parsnip::set_model_arg(
+    model = "boost_tree",
+    eng = "h2o",
+    parsnip = "stop_iter",
+    original = "early_stop",
+    func = list(pkg = "dials", fun = "stop_iter"),
+    has_submodel = FALSE
+  )
   parsnip::set_fit(
     model = "boost_tree",
     eng = "h2o",
@@ -191,6 +199,14 @@ add_boost_tree_h2o <- function() {
 #'   each node split (default = 1.0).
 #' @param min_split_improvement numeric,  minimum relative improvement in
 #'   squared error reduction in order for a split to happen (default = 1e-05)
+#' @param early_stop An integer or `NULL`. If not `NULL`, it is the number of
+#' training iterations without improvement before stopping. If `validation` is
+#' used, performance is base on the validation set; otherwise the training set
+#' is used.
+#' @param validation A positive number. If on `[0, 1)` the value, `validation`
+#' is a random proportion of data in `x` and `y` that are used for performance
+#' assessment and potential early stopping. If 1 or greater, it is the _number_
+#' of training set samples use for these purposes.
 #' @param ... other arguments not currently used.
 #'
 #' @return evaluated h2o model call
@@ -206,9 +222,21 @@ h2o_gbm_train <-
            sample_rate = 1.0,
            col_sample_rate = 1.0,
            min_split_improvement = 1e-05,
+           early_stop = NULL,
+           validation = 0.1,
            ...) {
 
     others <- list(...)
+
+    # early stopping
+    if (early_stop) {
+      n <- nrow(data)
+      trn_index <- sample(1:n, size = floor(n * validation) + 1)
+      valid <- h2o::as.h2o(data[-trn_index, ])
+      data <- data[trn_index, ]
+    } else {
+      valid <- NULL
+    }
 
     # convert to H2OFrame, get response and predictor names
     dest_frame <- paste("training_data", model_id, sep = "_")
@@ -225,13 +253,15 @@ h2o_gbm_train <-
       x = pre$X,
       y = pre$y,
       training_frame = pre$data,
+      validation_frame = valid,
       ntrees = ntrees,
       max_depth = max_depth,
       min_rows = min_rows,
       learn_rate = learn_rate,
       sample_rate = sample_rate,
       col_sample_rate = col_sample_rate,
-      min_split_improvement = min_split_improvement
+      min_split_improvement = min_split_improvement,
+      stopping_rounds = early_stop
     )
 
     res <- make_h2o_call("h2o.gbm", args, others)

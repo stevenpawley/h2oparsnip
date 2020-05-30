@@ -167,9 +167,31 @@ h2o_rf_train <-
 
     others <- list(...)
 
+    # early stopping
+    if ("stopping_rounds" %in% names(others)) {
+      stopping_rounds <- others$stopping_rounds
+    } else {
+      stopping_rounds <- 0
+    }
+
+    if (stopping_rounds != 0) {
+      n <- nrow(data)
+      valid_fraction <- 0.1
+      trn_index <- sample(1:n, size = floor(n * valid_fraction) + 1)
+      valid <- h2o::as.h2o(data[-trn_index, ])
+      data <- data[trn_index, ]
+    } else {
+      valid <- NULL
+    }
+
     # convert to H2OFrame, get response and predictor names
     dest_frame <- paste("training_data", model_id, sep = "_")
     pre <- preprocess_training(formula, data, dest_frame)
+
+    # check for valid mtries
+    if (mtries > length(pre$X)) {
+      mtries <- length(pre$X)
+    }
 
     # define arguments
     args <- list(
@@ -177,9 +199,11 @@ h2o_rf_train <-
       x = pre$X,
       y = pre$y,
       training_frame = pre$data,
+      validation_frame = valid,
       ntrees = ntrees,
       min_rows = min_rows,
-      mtries = mtries
+      mtries = mtries,
+      stopping_rounds = stopping_rounds
     )
 
     res <- make_h2o_call("h2o.randomForest", args, others)
