@@ -1,4 +1,4 @@
-translate_args <- function(object) {
+translate_args <- function(model_name) {
 
   envir <- get_model_env()
 

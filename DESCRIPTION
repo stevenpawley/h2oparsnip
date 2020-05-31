@@ -20,6 +20,8 @@ Imports:
     parsnip,
     h2o,
     dials,
+    tune,
+    rsample,
     discrim
 BugReports: https://github.com/stevenpawley/h2oparsnip/issues
 RoxygenNote: 7.1.0.9000
