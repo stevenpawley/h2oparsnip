@@ -8,7 +8,7 @@
 #' @return
 #' @export
 multi_predict._H2OMultinomialModel <-
-  function(object, new_data, type = NULL, ...) {
+  function(object, new_data, type = "class", ...) {
 
     args <- list(...)
 
@@ -36,7 +36,7 @@ multi_predict._H2OMultinomialModel <-
 #' @return
 #' @export
 multi_predict._H2ORegressionModel <-
-  function(object, new_data, type = NULL, ...) {
+  function(object, new_data, type = "numeric", ...) {
 
     args <- list(...)
 

@@ -171,6 +171,15 @@ add_mlp_h2o <- function() {
 #'   "TanhWithDropout", "Rectifier", "RectifierWithDropout", "Maxout",
 #'   "MaxoutWithDropout". Defaults to "Rectifier. If `hidden_dropout_ratios` > 0
 #'   then the equivalent activation function with dropout is used.
+#' @param stopping_rounds An integer specifying the number of training
+#'   iterations without improvement before stopping. If `stopping_rounds = 0`
+#'   (the default) then early stopping is disabled.  If `validation` is used,
+#'   performance is base on the validation set; otherwise the training set is
+#'   used.
+#' @param validation A positive number. If on `[0, 1)` the value, `validation`
+#' is a random proportion of data in `x` and `y` that are used for performance
+#' assessment and potential early stopping. If 1 or greater, it is the _number_
+#' of training set samples use for these purposes.
 #' @param ... other arguments not currently used
 #'
 #' @return evaluated h2o model call
@@ -184,9 +193,21 @@ h2o_mlp_train <-
            hidden = 100,
            epochs = 10,
            activation = "Rectifier",
+           stopping_rounds = 0,
+           validation = 0,
            ...) {
 
     others <- list(...)
+
+    # early stopping
+    if (stopping_rounds > 0 & validation > 0) {
+      n <- nrow(data)
+      trn_index <- sample(1:n, size = floor(n * validation) + 1)
+      valid <- h2o::as.h2o(data[-trn_index, ])
+      data <- data[trn_index, ]
+    } else {
+      valid <- NULL
+    }
 
     # convert to H2OFrame, get response and predictor names
     dest_frame <- paste("training_data", model_id, sep = "_")
@@ -228,11 +249,13 @@ h2o_mlp_train <-
       x = pre$X,
       y = pre$y,
       training_frame = pre$data,
+      validation_frame = valid,
       l2 = l2,
       hidden_dropout_ratios = hidden_dropout_ratios,
       hidden = hidden,
       epochs = epochs,
-      activation = activation
+      activation = activation,
+      stopping_rounds = stopping_rounds
     )
 
     res <- make_h2o_call("h2o.deeplearning", args, others)

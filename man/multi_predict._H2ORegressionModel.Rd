@@ -4,7 +4,7 @@
 \alias{multi_predict._H2ORegressionModel}
 \title{Multi_predict method for h2o regression models}
 \usage{
-\method{multi_predict}{`_H2ORegressionModel`}(object, new_data, type = NULL, ...)
+\method{multi_predict}{`_H2ORegressionModel`}(object, new_data, type = "numeric", ...)
 }
 \arguments{
 \item{object}{A `model_spec` object.}

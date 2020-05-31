@@ -14,6 +14,8 @@ h2o_mlp_train(
   hidden = 100,
   epochs = 10,
   activation = "Rectifier",
+  stopping_rounds = 0,
+  validation = 0,
   ...
 )
 }
@@ -38,6 +40,17 @@ to the model within the h2o cluster.}
 "TanhWithDropout", "Rectifier", "RectifierWithDropout", "Maxout",
 "MaxoutWithDropout". Defaults to "Rectifier. If `hidden_dropout_ratios` > 0
 then the equivalent activation function with dropout is used.}
+
+\item{stopping_rounds}{An integer specifying the number of training
+iterations without improvement before stopping. If `stopping_rounds = 0`
+(the default) then early stopping is disabled.  If `validation` is used,
+performance is base on the validation set; otherwise the training set is
+used.}
+
+\item{validation}{A positive number. If on `[0, 1)` the value, `validation`
+is a random proportion of data in `x` and `y` that are used for performance
+assessment and potential early stopping. If 1 or greater, it is the _number_
+of training set samples use for these purposes.}
 
 \item{...}{other arguments not currently used}
 }

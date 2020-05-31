@@ -4,7 +4,7 @@
 \alias{multi_predict._H2OMultinomialModel}
 \title{Multi_predict method for h2o classification models}
 \usage{
-\method{multi_predict}{`_H2OMultinomialModel`}(object, new_data, type = NULL, ...)
+\method{multi_predict}{`_H2OMultinomialModel`}(object, new_data, type = "class", ...)
 }
 \arguments{
 \item{object}{A `model_spec` object.}
