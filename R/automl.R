@@ -168,15 +168,21 @@ add_automl <- function() {
 h2o_automl_train <- function(formula, data, model_id, ...) {
   others <- list(...)
 
-  # convert to a H2OFrame and split response and predictor names
+  # get term names
+  X <- attr(stats::terms(formula, data = data), "term.labels")
+  y <- all.vars(formula)[1]
+
+  # convert to H2OFrame
   dest_frame <- paste("training_data", model_id, sep = "_")
-  pre <- preprocess_training(formula, data, dest_frame)
+
+  if (!inherits(data, "H2OFrame"))
+    data <- h2o::as.h2o(data, dest_frame)
 
   # define arguments
   args <- list(
-    x = pre$X,
-    y = pre$y,
-    training_frame = pre$data
+    x = X,
+    y = y,
+    training_frame = data
   )
 
   others <- list(...)

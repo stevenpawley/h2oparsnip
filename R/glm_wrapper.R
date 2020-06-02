@@ -26,16 +26,20 @@ h2o_glm_train <-
 
     others <- list(...)
 
-    # convert to H2OFrame, get response and predictor names
+    # get term names and convert to h2o
+    X <- attr(stats::terms(formula, data = data), "term.labels")
+    y <- all.vars(formula)[1]
     dest_frame <- paste("training_data", model_id, sep = "_")
-    pre <- preprocess_training(formula, data, dest_frame)
+
+    if (!inherits(data, "H2OFrame"))
+      data <- h2o::as.h2o(data, dest_frame)
 
     # define arguments
     args <- list(
       model_id = model_id,
-      x = pre$X,
-      y = pre$y,
-      training_frame = pre$data,
+      x = X,
+      y = y,
+      training_frame = data,
       alpha = alpha,
       lambda = lambda,
       family = family
@@ -43,17 +47,14 @@ h2o_glm_train <-
 
     res <- make_h2o_call("h2o.glm", args, others)
 
-    if (!"alpha" %in% names(res@parameters)) {
+    if (!"alpha" %in% names(res@parameters))
       res@parameters$alpha <- alpha
-    }
 
-    if (!"lambda" %in% names(res@parameters)) {
+    if (!"lambda" %in% names(res@parameters))
       res@parameters$lambda <- lambda
-    }
 
-    if (!"family" %in% names(res@parameters)) {
+    if (!"family" %in% names(res@parameters))
       res@parameters$family <- family
-    }
 
     res
   }

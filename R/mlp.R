@@ -199,19 +199,31 @@ h2o_mlp_train <-
 
     others <- list(...)
 
+    # get term names and convert to h2o
+    X <- attr(stats::terms(formula, data = data), "term.labels")
+    y <- all.vars(formula)[1]
+
     # early stopping
+    if (validation > 1)
+      validation <- validation / nrow(data)
+
     if (stopping_rounds > 0 & validation > 0) {
       n <- nrow(data)
       trn_index <- sample(1:n, size = floor(n * validation) + 1)
-      valid <- h2o::as.h2o(data[-trn_index, ])
+      valid <- data[-trn_index, ]
       data <- data[trn_index, ]
     } else {
       valid <- NULL
     }
 
-    # convert to H2OFrame, get response and predictor names
-    dest_frame <- paste("training_data", model_id, sep = "_")
-    pre <- preprocess_training(formula, data, dest_frame)
+    if (!inherits(data, "H2OFrame")) {
+      dest_frame <- paste("training_data", model_id, sep = "_")
+      data <- h2o::as.h2o(data, dest_frame)
+    }
+
+    if (!is.null(valid)) {
+      valid <- h2o::as.h2o(valid)
+    }
 
     # remap dials::values_activation to permissible h2o activation values
     if (activation %in% c("linear", "elu", "softmax")) {
@@ -246,9 +258,9 @@ h2o_mlp_train <-
     # define arguments
     args <- list(
       model_id = model_id,
-      x = pre$X,
-      y = pre$y,
-      training_frame = pre$data,
+      x = X,
+      y = y,
+      training_frame = data,
       validation_frame = valid,
       l2 = l2,
       hidden_dropout_ratios = hidden_dropout_ratios,
@@ -260,20 +272,17 @@ h2o_mlp_train <-
 
     res <- make_h2o_call("h2o.deeplearning", args, others)
 
-    if (!"l2" %in% names(res@parameters)) {
+    if (!"l2" %in% names(res@parameters))
       res@parameters$l2 <- l2
-    }
 
-    if (!"hidden_dropout_ratios" %in% names(res@parameters)) {
+    if (!"hidden_dropout_ratios" %in% names(res@parameters))
       res@parameters$hidden_dropout_ratios <- hidden_dropout_ratios
-    }
 
-    if (!"activation" %in% names(res@parameters)) {
+    if (!"activation" %in% names(res@parameters))
       res@parameters$activation <- activation
-    }
 
-    if (!"hidden" %in% names(res@parameters)) {
+    if (!"hidden" %in% names(res@parameters))
       res@parameters$hidden <- hidden
-    }
+
     res
   }

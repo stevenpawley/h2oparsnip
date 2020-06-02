@@ -138,3 +138,9 @@ test_that("mlp h2o multi_predict", {
   )
 })
 
+test_that("mlp h2o early stopping", {
+  mlp_clf <- mlp(mode = "classification", hidden_units = 100, epochs = 100) %>%
+    set_engine("h2o", seed = 1234, reproducible = TRUE, stopping_rounds = 10, validation = 0.1)
+
+  fitted_clf <- mlp_clf %>% fit(Species ~., iris_df)
+})

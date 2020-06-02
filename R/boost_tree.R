@@ -229,31 +229,43 @@ h2o_gbm_train <-
 
     others <- list(...)
 
+    # get term names and convert to h2o
+    X <- attr(stats::terms(formula, data = data), "term.labels")
+    y <- all.vars(formula)[1]
+
     # early stopping
+    if (validation > 1)
+      validation <- validation / nrow(data)
+
     if (stopping_rounds > 0 & validation > 0) {
       n <- nrow(data)
       trn_index <- sample(1:n, size = floor(n * validation) + 1)
-      valid <- h2o::as.h2o(data[-trn_index, ])
+      valid <- data[-trn_index, ]
       data <- data[trn_index, ]
     } else {
       valid <- NULL
     }
 
-    # convert to H2OFrame, get response and predictor names
-    dest_frame <- paste("training_data", model_id, sep = "_")
-    pre <- preprocess_training(formula, data, dest_frame)
+    # convert to h2oframe
+    if (!inherits(data, "H2OFrame")) {
+      dest_frame <- paste("training_data", model_id, sep = "_")
+      data <- h2o::as.h2o(data, dest_frame)
+    }
+
+    if (!is.null(valid)) {
+      valid <- h2o::as.h2o(valid)
+    }
 
     # convert mtry (number of features) to proportions
-    if (col_sample_rate > 1) {
-      col_sample_rate <- col_sample_rate / length(pre$X)
-    }
+    if (col_sample_rate > 1)
+      col_sample_rate <- col_sample_rate / length(X)
 
     # define arguments
     args <- list(
       model_id = model_id,
-      x = pre$X,
-      y = pre$y,
-      training_frame = pre$data,
+      x = X,
+      y = y,
+      training_frame = data,
       validation_frame = valid,
       ntrees = ntrees,
       max_depth = max_depth,
