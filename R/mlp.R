@@ -56,9 +56,7 @@ add_mlp_h2o <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_mlp_train"),
-      defaults = list(
-        model_id = paste("mlp", as.integer(runif(1, 0, 1e9)), sep = "_")
-      )
+      defaults = list()
     )
   )
   parsnip::set_fit(
@@ -69,9 +67,7 @@ add_mlp_h2o <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_mlp_train"),
-      defaults = list(
-        model_id = paste("mlp", as.integer(runif(1, 0, 1e9)), sep = "_")
-      )
+      defaults = list()
     )
   )
 
@@ -160,8 +156,6 @@ add_mlp_h2o <- function() {
 #'
 #' @param formula formula
 #' @param data data.frame of training data
-#' @param model_id A randomly assigned identifier for the model. Used to refer
-#'   to the model within the h2o cluster.
 #' @param l2 numeric, l2 regulation parameter, default = 0
 #' @param hidden_dropout_ratios dropout ratio for a single hidden layer (default
 #'   = 0)
@@ -187,7 +181,6 @@ add_mlp_h2o <- function() {
 h2o_mlp_train <-
   function(formula,
            data,
-           model_id,
            l2 = 0,
            hidden_dropout_ratios = 0,
            hidden = 100,
@@ -216,10 +209,8 @@ h2o_mlp_train <-
       valid <- NULL
     }
 
-    if (!inherits(data, "H2OFrame")) {
-      dest_frame <- paste("training_data", model_id, sep = "_")
-      data <- h2o::as.h2o(data, dest_frame)
-    }
+    if (!inherits(data, "H2OFrame"))
+      data <- h2o::as.h2o(data)
 
     if (!is.null(valid)) {
       valid <- h2o::as.h2o(valid)
@@ -257,7 +248,6 @@ h2o_mlp_train <-
 
     # define arguments
     args <- list(
-      model_id = model_id,
       x = X,
       y = y,
       training_frame = data,

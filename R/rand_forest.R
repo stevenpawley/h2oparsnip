@@ -41,9 +41,7 @@ add_rand_forest_h2o <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_rf_train"),
-      defaults = list(
-        model_id = paste("rand_forest", as.integer(runif(1, 0, 1e9)), sep = "_")
-      )
+      defaults = list()
     )
   )
   parsnip::set_fit(
@@ -54,9 +52,7 @@ add_rand_forest_h2o <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_rf_train"),
-      defaults = list(
-        model_id = paste("rand_forest", as.integer(runif(1, 0, 1e9)), sep = "_")
-      )
+      defaults = list()
     )
   )
 
@@ -145,8 +141,6 @@ add_rand_forest_h2o <- function() {
 #'
 #' @param formula formula
 #' @param data data.frame of training data
-#' @param model_id A randomly assigned identifier for the model. Used to refer
-#'   to the model within the h2o cluster.
 #' @param ntrees integer, the number of trees to build (default = 50)
 #' @param min_rows integer, the minimum number of observations for a leaf
 #'   (default = 10)
@@ -168,7 +162,6 @@ add_rand_forest_h2o <- function() {
 h2o_rf_train <-
   function(formula,
            data,
-           model_id,
            ntrees = 50,
            min_rows = 10,
            mtries = -1,
@@ -196,14 +189,11 @@ h2o_rf_train <-
     }
 
     # convert to h2oframe
-    if (!inherits(data, "H2OFrame")) {
-      dest_frame <- paste("training_data", model_id, sep = "_")
-      data <- h2o::as.h2o(data, dest_frame)
-    }
+    if (!inherits(data, "H2OFrame"))
+      data <- h2o::as.h2o(data)
 
-    if (!is.null(valid)) {
+    if (!is.null(valid))
       valid <- h2o::as.h2o(valid)
-    }
 
     # check for valid mtries
     if (mtries > length(X))
@@ -211,7 +201,6 @@ h2o_rf_train <-
 
     # define arguments
     args <- list(
-      model_id = model_id,
       x = X,
       y = y,
       training_frame = data,

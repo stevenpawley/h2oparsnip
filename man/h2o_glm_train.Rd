@@ -4,23 +4,12 @@
 \alias{h2o_glm_train}
 \title{Wrapper for training a h2o.glm model as part of a parsnip}
 \usage{
-h2o_glm_train(
-  formula,
-  data,
-  model_id,
-  alpha = NULL,
-  lambda = NULL,
-  family = NULL,
-  ...
-)
+h2o_glm_train(formula, data, alpha = NULL, lambda = NULL, family = NULL, ...)
 }
 \arguments{
 \item{formula}{formula}
 
 \item{data}{data.frame of training data}
-
-\item{model_id}{A randomly assigned identifier for the model. Used to refer
-to the model within the h2o cluster.}
 
 \item{alpha}{numeric, Distribution of regularization between the L1 (Lasso)
 and L2 (Ridge) penalties. A value of 1 for alpha represents Lasso

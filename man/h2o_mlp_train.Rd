@@ -8,7 +8,6 @@ h2o engine}
 h2o_mlp_train(
   formula,
   data,
-  model_id,
   l2 = 0,
   hidden_dropout_ratios = 0,
   hidden = 100,
@@ -23,9 +22,6 @@ h2o_mlp_train(
 \item{formula}{formula}
 
 \item{data}{data.frame of training data}
-
-\item{model_id}{A randomly assigned identifier for the model. Used to refer
-to the model within the h2o cluster.}
 
 \item{l2}{numeric, l2 regulation parameter, default = 0}
 

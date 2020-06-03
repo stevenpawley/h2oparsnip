@@ -25,9 +25,7 @@ add_naive_Bayes_h2o <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_naiveBayes_train"),
-      defaults = list(
-        model_id = paste("naive_bayes", as.integer(runif(1, 0, 1e9)), sep = "_")
-      )
+      defaults = list()
     )
   )
 
@@ -84,8 +82,6 @@ add_naive_Bayes_h2o <- function() {
 #'
 #' @param formula formula
 #' @param data data.frame of training data
-#' @param model_id A randomly assigned identifier for the model. Used to refer
-#'   to the model within the h2o cluster.
 #' @param laplace numeric, the Laplace smoothing parameter, must be >= 0.
 #' @param ... other arguments not currently used
 #'
@@ -94,7 +90,6 @@ add_naive_Bayes_h2o <- function() {
 h2o_naiveBayes_train <-
   function(formula,
            data,
-           model_id,
            laplace = 0,
            ...) {
 
@@ -103,10 +98,9 @@ h2o_naiveBayes_train <-
     # get term names and convert to h2o
     X <- attr(stats::terms(formula, data = data), "term.labels")
     y <- all.vars(formula)[1]
-    dest_frame <- paste("training_data", model_id, sep = "_")
 
     if (!inherits(data, "H2OFrame"))
-      data <- h2o::as.h2o(data, dest_frame)
+      data <- h2o::as.h2o(data)
 
     # check arguments
     if (laplace < 0)
@@ -114,7 +108,6 @@ h2o_naiveBayes_train <-
 
     # define arguments
     args <- list(
-      model_id = model_id,
       x = X,
       y = y,
       training_frame = data,

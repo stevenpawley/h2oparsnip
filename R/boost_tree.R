@@ -81,9 +81,7 @@ add_boost_tree_h2o <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_gbm_train"),
-      defaults = list(
-        model_id = paste("gbm", as.integer(runif(1, 0, 1e9)), sep = "_")
-      )
+      defaults = list()
     )
   )
   parsnip::set_fit(
@@ -94,9 +92,7 @@ add_boost_tree_h2o <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_gbm_train"),
-      defaults = list(
-        model_id = paste("gbm", as.integer(runif(1, 0, 1e9)), sep = "_")
-      )
+      defaults = list()
     )
   )
 
@@ -185,8 +181,6 @@ add_boost_tree_h2o <- function() {
 #'
 #' @param formula formula
 #' @param data data.frame of training data
-#' @param model_id A randomly assigned identifier for the model. Used to refer
-#'   to the model within the h2o cluster.
 #' @param ntrees integer, the number of trees to build (default = 50).
 #' @param max_depth integer, the maximum tree depth (default = 10).
 #' @param min_rows integer, the minimum number of observations for a leaf
@@ -215,7 +209,6 @@ add_boost_tree_h2o <- function() {
 h2o_gbm_train <-
   function(formula,
            data,
-           model_id,
            ntrees = 50,
            max_depth = 5,
            min_rows = 10,
@@ -247,10 +240,8 @@ h2o_gbm_train <-
     }
 
     # convert to h2oframe
-    if (!inherits(data, "H2OFrame")) {
-      dest_frame <- paste("training_data", model_id, sep = "_")
-      data <- h2o::as.h2o(data, dest_frame)
-    }
+    if (!inherits(data, "H2OFrame"))
+      data <- h2o::as.h2o(data)
 
     if (!is.null(valid)) {
       valid <- h2o::as.h2o(valid)
@@ -262,7 +253,6 @@ h2o_gbm_train <-
 
     # define arguments
     args <- list(
-      model_id = model_id,
       x = X,
       y = y,
       training_frame = data,

@@ -33,8 +33,7 @@ add_logistic_reg_h2o <- function() {
       protect = c("formula", "x", "y", "training_frame", "family"),
       func = c(fun = "h2o_glm_train"),
       defaults = list(
-        family = "binomial",
-        model_id = paste("logistic_reg", as.integer(runif(1, 0, 1e9)), sep = "_")
+        family = "binomial"
       )
     )
   )

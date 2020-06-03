@@ -8,7 +8,6 @@
 h2o_rf_train(
   formula,
   data,
-  model_id,
   ntrees = 50,
   min_rows = 10,
   mtries = -1,
@@ -21,9 +20,6 @@ h2o_rf_train(
 \item{formula}{formula}
 
 \item{data}{data.frame of training data}
-
-\item{model_id}{A randomly assigned identifier for the model. Used to refer
-to the model within the h2o cluster.}
 
 \item{ntrees}{integer, the number of trees to build (default = 50)}
 

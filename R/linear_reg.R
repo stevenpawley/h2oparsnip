@@ -33,9 +33,8 @@ add_linear_reg_h2o <- function() {
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_glm_train"),
       defaults = list(
-        family = "gaussian",
-        model_id = paste("linear_reg", as.integer(runif(1, 0, 1e9)), sep = "_")
-        )
+        family = "gaussian"
+      )
     )
   )
 

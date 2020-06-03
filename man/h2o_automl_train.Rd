@@ -4,15 +4,12 @@
 \alias{h2o_automl_train}
 \title{Wrapper for training a h2o.automl model}
 \usage{
-h2o_automl_train(formula, data, model_id, ...)
+h2o_automl_train(formula, data, ...)
 }
 \arguments{
 \item{formula}{formula}
 
 \item{data}{data.frame of training data}
-
-\item{model_id}{A randomly assigned identifier for the model. Used to refer
-to the model within the h2o cluster.}
 
 \item{...}{Other arguments to pass the h2o.automl}
 }

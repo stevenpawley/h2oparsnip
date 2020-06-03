@@ -55,9 +55,7 @@ add_automl <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_automl_train"),
-      defaults = list(
-        model_id = paste("automl", as.integer(runif(1, 0, 1e9)), sep = "_")
-      )
+      defaults = list()
     )
   )
   parsnip::set_fit(
@@ -68,9 +66,7 @@ add_automl <- function() {
       interface = "formula",
       protect = c("formula", "x", "y", "training_frame"),
       func = c(fun = "h2o_automl_train"),
-      defaults = list(
-        model_id = paste("automl", as.integer(runif(1, 0, 1e9)), sep = "_")
-      )
+      defaults = list()
     )
   )
 
@@ -159,13 +155,11 @@ add_automl <- function() {
 #'
 #' @param formula formula
 #' @param data data.frame of training data
-#' @param model_id A randomly assigned identifier for the model. Used to refer
-#'   to the model within the h2o cluster.
 #' @param ... Other arguments to pass the h2o.automl
 #'
 #' @return evaluated h2o model call
 #' @export
-h2o_automl_train <- function(formula, data, model_id, ...) {
+h2o_automl_train <- function(formula, data, ...) {
   others <- list(...)
 
   # get term names
@@ -173,10 +167,8 @@ h2o_automl_train <- function(formula, data, model_id, ...) {
   y <- all.vars(formula)[1]
 
   # convert to H2OFrame
-  dest_frame <- paste("training_data", model_id, sep = "_")
-
   if (!inherits(data, "H2OFrame"))
-    data <- h2o::as.h2o(data, dest_frame)
+    data <- h2o::as.h2o(data)
 
   # define arguments
   args <- list(
