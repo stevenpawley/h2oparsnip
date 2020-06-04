@@ -1,33 +1,24 @@
 # library(tidymodels)
 # library(h2oparsnip)
 # library(h2o)
+# library(yardstick)
 # h2o.init()
 #
 # object <-
-#   boost_tree(mode = "classification", trees = tune(), learn_rate = tune(), min_n = 3) %>%
-#   set_engine("h2o")
+#   parsnip::multinom_reg(mode = "classification", penalty = tune(), mixture = tune()) %>%
+#   set_engine("h2o", seed = 1234)
 # rec_obj <- iris %>% recipe(Species ~.)
 # object <- workflow() %>%
 #   add_recipe(rec_obj) %>%
 #   add_model(object)
-# grid <- expand.grid(trees = c(25, 50, 100), learn_rate = c(0.1, 0.3))
+# grid <- expand.grid(penalty = c(0.1, 1), mixture = c(0.1, 0.3, 0.5, 0.7, 1.0))
 #
-# resamples <- vfold_cv(iris, v = 5)
-#
-# res_tune <- tune_grid(
-#   object,
-#   resamples = resamples,
-#   grid = grid,
-#   metrics = metric_set(accuracy)
-# )
-# attributes(res_tune)
-# collect_metrics(res_tune)
-#
-# res <- tune_grid_h2o(object, resamples = resamples, grid = grid, metrics = "accuracy")
-# attributes(res)
+# resamples <- vfold_cv(iris, v = 2)
+# res <- tune_grid_h2o(object, resamples = resamples, grid = grid)
 # collect_metrics(res)
-# select_best(res, metric = "accuracy")
-#
+# attributes(res)
+# select_best(res, metric = "mn_log_loss")
+
 
 #' Tune h2o models
 #'
@@ -35,30 +26,36 @@
 #' @param preprocessor A recipe object.
 #' @param resamples A rset object.
 #' @param grid A tibble of hyperparameter values.
-#' @param metrics A character vector of metrics to evaluate the tuning results.
-#'   Available metrics are r2, mean_per_class_accuracy, max_per_class_error,
-#'   err, total_rows, rmse, accuracy, err_count, logloss, mse,
-#'   mean_per_class_error
+#' @param verbose Whether to provide progress messages.
 #'
 #' @return
 #' @export
-tune_grid_h2o <- function(object, preprocessor = NULL, resamples, grid, metrics) {
-
-  # check metrics
-  metric_types <- tribble(
-    ~.h2o_metric, ~.metric, ~.estimator,
-    "r2", "rsq", "standard",
-    "mean_per_class_accuracy", "accuracy", "macro",
-    "rmse", "rmse", "standard",
-    "accuracy", "accuracy", "multiclass",
-    "logloss", "mn_log_loss", "multiclass"
-  )
+#' @importFrom yardstick mn_log_loss rsq
+tune_grid_h2o <-
+  function(object,
+           preprocessor = NULL,
+           resamples,
+           grid,
+           verbose = FALSE) {
 
   # tuning model params only ----
   if (inherits(object, "workflow")) {
     preprocessor <- workflows::pull_workflow_preprocessor(object)
     object <- workflows::pull_workflow_spec(object)
   }
+
+  mode <- object$mode
+  model_args <- object$args
+
+  if (mode == "classification") {
+    metric <- "logloss"
+    yardstick_name <- "mn_log_loss"
+  } else {
+    metric <- "r2"
+    yardstick_name <- "rsq"
+  }
+
+  metric <- ifelse(mode == "classification", "logloss", "r2")
 
   # get complete dataset from resamples
   data_train <- rsample::training(resamples$splits[[1]])
@@ -98,14 +95,17 @@ tune_grid_h2o <- function(object, preprocessor = NULL, resamples, grid, metrics)
   if (inherits(object, "linear_reg")) {
     model_name <- "linear_reg"
     algorithm <- "glm"
+    model_args$family = "gaussian"
   }
   if (inherits(object, "logistic_reg")) {
     model_name <- "logistic_reg"
     algorithm <- "glm"
+    model_args$family = "binomial"
   }
-  if (inherits(object, "multinomial_reg")) {
-    model_name <- "multinomial_reg"
+  if (inherits(object, "multinom_reg")) {
+    model_name <- "multinom_reg"
     algorithm <- "glm"
+    model_args$family = "multinomial"
   }
   if (inherits(object, "mlp")) {
     model_name <- "mlp"
@@ -119,10 +119,10 @@ tune_grid_h2o <- function(object, preprocessor = NULL, resamples, grid, metrics)
   original_names <- translate_args(model_name) %>%
     dplyr::select(parsnip, h2o) %>%
     tidyr::drop_na()
+
   nm <- original_names$h2o %>%
     rlang::set_names(original_names$parsnip)
 
-  model_args <- object$args
   model_args <- rename_list(model_args, nm)
   tuning_args <- nm[tune::tune_args(object)$name]
   tuning_args <- as.character(tuning_args)
@@ -143,13 +143,18 @@ tune_grid_h2o <- function(object, preprocessor = NULL, resamples, grid, metrics)
   }
 
   model_args <- model_args[!names(model_args) %in% tuning_args]
+  model_args <- append(model_args, object$eng_args)
 
-  if (length(model_args) == 0) {
+  if (length(model_args) == 0)
     model_args <- NULL
-  }
 
   # fit h2o.grid on each resample
-  resamples$.metrics <- map(assessment_indices, function(ids) {
+  resamples$.metrics <-
+    map2(assessment_indices, seq_along(assessment_indices), function(ids, n) {
+
+    if (verbose)
+      message(glue::glue("Fitting resample {n}"))
+
     grid_args <- list(
       grid_id = paste(algorithm, "grid", as.integer(runif(1, 0, 1e9)), sep = "_"),
       algorithm = algorithm,
@@ -164,23 +169,46 @@ tune_grid_h2o <- function(object, preprocessor = NULL, resamples, grid, metrics)
 
     scores <- h2o::h2o.getGrid(
       grid_id = grid_args$grid_id,
-      sort_by = "accuracy"
+      sort_by = metric
     )
     scores <- as.data.frame(scores@summary_table)
     scores[, ncol(scores)] <- as.numeric(scores[, ncol(scores)])
+
+    for (x in names(params)) {
+      scores[[x]] <- gsub("\\[", "", scores[[x]])
+      scores[[x]] <- gsub("\\]", "", scores[[x]])
+    }
 
     scores <- scores %>%
       as_tibble() %>%
       dplyr::select(-model_ids) %>%
       dplyr::mutate_at(tuning_args, as.numeric) %>%
-      dplyr::mutate(.h2o_metric = metrics) %>%
-      dplyr::left_join(metric_types, by = ".h2o_metric")
-
-    names(scores)[length(names(scores))-3] <- ".estimate"
+      dplyr::mutate(
+        .metric = yardstick_name,
+        .estimator = if_else(mode == "classification", "multiclass", "standard")
+        ) %>%
+      dplyr::rename(.estimate = !!metric)
 
     scores
   })
 
   class(resamples) <- c("tune_results", class(resamples))
+
+  arg_names <- names(grid)
+  param_list <- map(
+    arg_names,
+    ~ glue::glue("dials::{.x}()") %>%
+      rlang::parse_expr() %>%
+      rlang::eval_tidy()
+  )
+  attr(resamples, "parameters") <- dials::parameters(param_list)
+
+  if (mode == "classification") {
+    yardstick_metric <- yardstick::metric_set(mn_log_loss)
+  } else {
+    yardstick_metric <- yardstick::metric_set(rsq)
+  }
+  attr(resamples, "metrics") <- yardstick_metric
+
   resamples
 }

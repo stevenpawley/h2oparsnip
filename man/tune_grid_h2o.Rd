@@ -4,7 +4,7 @@
 \alias{tune_grid_h2o}
 \title{Tune h2o models}
 \usage{
-tune_grid_h2o(object, preprocessor = NULL, resamples, grid, metrics)
+tune_grid_h2o(object, preprocessor = NULL, resamples, grid, verbose = FALSE)
 }
 \arguments{
 \item{object}{A parsnip model spec object.}
@@ -15,10 +15,7 @@ tune_grid_h2o(object, preprocessor = NULL, resamples, grid, metrics)
 
 \item{grid}{A tibble of hyperparameter values.}
 
-\item{metrics}{A character vector of metrics to evaluate the tuning results.
-Available metrics are r2, mean_per_class_accuracy, max_per_class_error,
-err, total_rows, rmse, accuracy, err_count, logloss, mse,
-mean_per_class_error}
+\item{verbose}{Whether to provide progress messages.}
 }
 \value{
 
