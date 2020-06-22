@@ -69,6 +69,18 @@ add_automl <- function() {
       defaults = list()
     )
   )
+  parsnip::set_encoding(
+    model = "automl",
+    eng = "h2o",
+    mode = "regression",
+    options = list(predictor_indicators = FALSE)
+  )
+  parsnip::set_encoding(
+    model = "automl",
+    eng = "h2o",
+    mode = "classification",
+    options = list(predictor_indicators = FALSE)
+  )
 
   # regression predict
   parsnip::set_pred(
