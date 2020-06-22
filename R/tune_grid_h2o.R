@@ -22,6 +22,18 @@
 
 #' Tune h2o models
 #'
+#' This is a prototype of a version of tune_grid that uses h2o.grid to perform
+#' hyperparameter tuning.
+#'
+#' Current limitations
+#' -------------------
+#' - Only model arguments can be tuned
+#' - Parsnip descriptors are not supported
+#' - Custom metrics are not support. Currently r2 is used for regression and
+#' logloss is used for classification.
+#' - Parsnip only allows `data.frame` and `tbl_spark` objects to be passed
+#' to the `fit` method, not `H2OFrame` objects.
+#'
 #' @param object A parsnip model spec object.
 #' @param preprocessor A recipe object.
 #' @param resamples A rset object.
@@ -54,8 +66,6 @@ tune_grid_h2o <-
     metric <- "r2"
     yardstick_name <- "rsq"
   }
-
-  metric <- ifelse(mode == "classification", "logloss", "r2")
 
   # get complete dataset from resamples
   data_train <- rsample::training(resamples$splits[[1]])
@@ -169,7 +179,8 @@ tune_grid_h2o <-
 
     scores <- h2o::h2o.getGrid(
       grid_id = grid_args$grid_id,
-      sort_by = metric
+      sort_by = metric,
+      decreasing = FALSE
     )
     scores <- as.data.frame(scores@summary_table)
     scores[, ncol(scores)] <- as.numeric(scores[, ncol(scores)])

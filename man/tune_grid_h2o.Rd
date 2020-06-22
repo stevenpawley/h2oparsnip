@@ -21,5 +21,16 @@ tune_grid_h2o(object, preprocessor = NULL, resamples, grid, verbose = FALSE)
 
 }
 \description{
-Tune h2o models
+This is a prototype of a version of tune_grid that uses h2o.grid to perform
+hyperparameter tuning.
+}
+\details{
+Current limitations
+-------------------
+- Only model arguments can be tuned
+- Parsnip descriptors are not supported
+- Custom metrics are not support. Currently r2 is used for regression and
+logloss is used for classification.
+- Parsnip only allows `data.frame` and `tbl_spark` objects to be passed
+to the `fit` method, not `H2OFrame` objects.
 }

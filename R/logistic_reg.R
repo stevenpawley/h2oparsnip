@@ -37,6 +37,12 @@ add_logistic_reg_h2o <- function() {
       )
     )
   )
+  parsnip::set_encoding(
+    model = "logistic_reg",
+    eng = "h2o",
+    mode = "classification",
+    options = list(predictor_indicators = FALSE)
+  )
 
   # classification predict
   parsnip::set_pred(

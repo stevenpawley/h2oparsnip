@@ -37,6 +37,12 @@ add_linear_reg_h2o <- function() {
       )
     )
   )
+  parsnip::set_encoding(
+    model = "linear_reg",
+    eng = "h2o",
+    mode = "regression",
+    options = list(predictor_indicators = FALSE)
+  )
 
   # regression predict
   parsnip::set_pred(

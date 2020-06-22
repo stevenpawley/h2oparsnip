@@ -28,6 +28,12 @@ add_naive_Bayes_h2o <- function() {
       defaults = list()
     )
   )
+  parsnip::set_encoding(
+    model = "naive_Bayes",
+    eng = "h2o",
+    mode = "classification",
+    options = list(predictor_indicators = FALSE)
+  )
 
   # classification predict
   parsnip::set_pred(

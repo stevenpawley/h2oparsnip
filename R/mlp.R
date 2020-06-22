@@ -70,6 +70,18 @@ add_mlp_h2o <- function() {
       defaults = list()
     )
   )
+  parsnip::set_encoding(
+    model = "mlp",
+    eng = "h2o",
+    mode = "classification",
+    options = list(predictor_indicators = FALSE)
+  )
+  parsnip::set_encoding(
+    model = "mlp",
+    eng = "h2o",
+    mode = "regression",
+    options = list(predictor_indicators = FALSE)
+  )
 
   # regression predict
   parsnip::set_pred(
