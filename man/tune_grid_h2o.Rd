@@ -8,19 +8,30 @@ tune_grid_h2o(
   object,
   preprocessor = NULL,
   resamples,
-  grid,
-  metric,
+  param_info = NULL,
+  grid = 10,
+  metric = NULL,
   verbose = FALSE
 )
 }
 \arguments{
-\item{object}{A parsnip model spec object.}
+\item{object}{A parsnip `model_spec` object.}
 
-\item{preprocessor}{A recipe object.}
+\item{preprocessor}{A `recipe` object.}
 
-\item{resamples}{A rset object.}
+\item{resamples}{An `rset` object.}
 
-\item{grid}{A tibble of hyperparameter values.}
+\item{param_info}{A `dials::parameters()` object or NULL. If none is given, a
+parameters set is derived from other arguments. Passing this argument can
+be useful when parameter ranges need to be customized.}
+
+\item{grid}{A `data.frame` of tuning combinations or a positive integer. The
+data frame should have columns for each parameter being tuned and rows for
+tuning parameter candidates. An integer denotes the number of candidate
+parameter sets to be created automatically. If a positive integer is used
+or no tuning grid is supplied, then a semi-random grid via
+`dials::grid_latin_hypercube` is created based on the specified number of
+tuning iterations (default size = 10).}
 
 \item{metric}{A `character` vector specifying the h2o metric to use as the
 scoring criterion for the hyperparameter tuning. Must be one of  c("rsq",
@@ -36,11 +47,11 @@ scoring criterion for the hyperparameter tuning. Must be one of  c("rsq",
 This is a prototype of a version of tune_grid that uses h2o.grid to perform
 hyperparameter tuning.
 }
-\details{
-Limitations
+\section{Limitations}{
 
-- Only model arguments can be tuned, not arguments
-in the preprocessing recipes.
+- Only model arguments can be tuned, not arguments in the preprocessing recipes.
+
 - Parsnip only allows `data.frame` and `tbl_spark` objects to be passed
 to the `fit` method, not `H2OFrame` objects.
 }
+

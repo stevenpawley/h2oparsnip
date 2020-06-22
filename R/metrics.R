@@ -52,7 +52,6 @@ mse.data.frame <- function(data, truth, estimate, na_rm = TRUE, ...) {
 #'   "sensitivity", "rmse", "accuracy", "mn_log_loss", "mse")
 #'
 #' @return A list with `name` and `metric_set`
-#' @export
 convert_h2o_metrics <- function(metric) {
   supported_metrics = c("rsq", "sensitivity", "rmse", "accuracy", "mn_log_loss", "mse")
 

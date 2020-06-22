@@ -3,6 +3,7 @@
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/h2oparsnip)](https://CRAN.R-project.org/package=h2oparsnip)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![Codecov test coverage](https://codecov.io/gh/stevenpawley/h2oparsnip/branch/master/graph/badge.svg)](https://codecov.io/gh/stevenpawley/h2oparsnip?branch=master)
 <!-- badges: end -->
 
 ```h2oparsnip``` provides a set of wrappers to bind h2o algorthms with the
