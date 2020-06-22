@@ -1,48 +1,12 @@
-# library(tidymodels)
-# library(h2oparsnip)
-# library(h2o)
-# library(yardstick)
-# h2o.init()
-#
-# object <-
-#   parsnip::rand_forest(mode = "classification", min_n = tune(), mtry = .cols()) %>%
-#   set_engine("h2o", seed = 1234)
-# rec_obj <- iris %>% recipe(Species ~.)
-# object <- workflow() %>%
-#   add_recipe(rec_obj) %>%
-#   add_model(object)
-# grid <- expand.grid(min_n = c(1, 5, 10))
-# resamples <- vfold_cv(iris, v = 2)
-# res <- tune_grid_h2o(object, resamples = resamples, grid = grid)
-# res$.metrics
-#
-#
-# object <-
-#   parsnip::multinom_reg(mode = "classification", penalty = tune(), mixture = tune()) %>%
-#   set_engine("h2o", seed = 1234)
-# rec_obj <- iris %>% recipe(Species ~.)
-# object <- workflow() %>%
-#   add_recipe(rec_obj) %>%
-#   add_model(object)
-# grid <- expand.grid(penalty = c(0.1, 1), mixture = c(0.1, 0.3, 0.5, 0.7, 1.0))
-#
-# resamples <- vfold_cv(iris, v = 2)
-# res <- tune_grid_h2o(object, resamples = resamples, grid = grid)
-# collect_metrics(res)
-# attributes(res)
-# select_best(res, metric = "mn_log_loss")
-
-
 #' Tune h2o models
 #'
 #' This is a prototype of a version of tune_grid that uses h2o.grid to perform
 #' hyperparameter tuning.
 #'
-#' Current limitations
-#' -------------------
-#' - Only model arguments can be tuned
-#' - Custom metrics are not support. Currently r2 is used for regression and
-#' logloss is used for classification.
+#' Limitations
+#'
+#' - Only model arguments can be tuned, not arguments
+#' in the preprocessing recipes.
 #' - Parsnip only allows `data.frame` and `tbl_spark` objects to be passed
 #' to the `fit` method, not `H2OFrame` objects.
 #'
@@ -50,47 +14,52 @@
 #' @param preprocessor A recipe object.
 #' @param resamples A rset object.
 #' @param grid A tibble of hyperparameter values.
+#' @param metric A `character` vector specifying the h2o metric to use as the
+#'   scoring criterion for the hyperparameter tuning. Must be one of  c("rsq",
+#'   "sensitivity", "rmse", "accuracy", "mn_log_loss", "mse"). The default is
+#'   "rsq" for regression models and "mn_log_loss" for classification models.
 #' @param verbose Whether to provide progress messages.
 #'
 #' @return
 #' @export
-#' @importFrom yardstick mn_log_loss rsq
 tune_grid_h2o <-
   function(object,
            preprocessor = NULL,
            resamples,
            grid,
+           metric,
            verbose = FALSE) {
 
-  # tuning model params only ----
+  # convert workflow to model_spec and recipe objects
   if (inherits(object, "workflow")) {
     preprocessor <- workflows::pull_workflow_preprocessor(object)
     object <- workflows::pull_workflow_spec(object)
   }
 
+  # get mode
   mode <- object$mode
   model_args <- object$args
 
-  if (mode == "classification") {
-    metric <- "logloss"
-    yardstick_name <- "mn_log_loss"
-  } else {
-    metric <- "r2"
-    yardstick_name <- "rsq"
-  }
+  # process scoring metric
+  if (is.null(metric) & mode == "classification")
+    metric <- "mn_log_loss"
+  if (is.null(metric) & mode == "regression")
+    metric <- "rsq"
 
-  # get complete dataset from resamples
+  yardstick_metric <- convert_h2o_metrics(metric)
+
+  # extract complete dataset from resamples
   data_train <- rsample::training(resamples$splits[[1]])
   data_test <- rsample::testing(resamples$splits[[1]])
   full_data <- dplyr::bind_rows(data_train, data_test)
-
   row_order <- c(as.numeric(rownames(data_train)), as.numeric(rownames(data_test)))
   full_data <- as_tibble(full_data[order(row_order), ])
 
+  # prep the recipe
   prepped_recipe <- preprocessor %>% recipes::prep()
   full_data <- prepped_recipe %>% recipes::bake(full_data)
 
-  # get terms
+  # get predictor and outcome terms
   outcome <- prepped_recipe$term_info %>%
     dplyr::filter(role == "outcome") %>%
     dplyr::pull(variable)
@@ -98,6 +67,7 @@ tune_grid_h2o <-
   predictors <- prepped_recipe$term_info %>%
     dplyr::filter(role == "predictor") %>%
     dplyr::pull(variable)
+
   form <- paste(outcome, "~", paste(predictors, collapse = " + "))
   form <- as.formula(form)
 
@@ -113,7 +83,7 @@ tune_grid_h2o <-
   # pass full data to h2o
   full_data_h2o <- h2o::as.h2o(full_data, destination_frame = "grid_data")
 
-  # translate arguments
+  # translate parsnip arguments to h2o
   if (inherits(object, "boost_tree")) {
     model_name <- "boost_tree"
     algorithm <- "gbm"
@@ -200,7 +170,7 @@ tune_grid_h2o <-
 
     scores <- h2o::h2o.getGrid(
       grid_id = grid_args$grid_id,
-      sort_by = metric,
+      sort_by = yardstick_metric$name,
       decreasing = FALSE
     )
     scores <- as.data.frame(scores@summary_table)
@@ -216,12 +186,12 @@ tune_grid_h2o <-
       dplyr::select(-model_ids) %>%
       dplyr::mutate_at(tuning_args, as.numeric) %>%
       dplyr::mutate(
-        .metric = yardstick_name,
+        .metric = metric,
         .estimator = if_else(mode == "classification", "multiclass", "standard")
         ) %>%
-      dplyr::rename(.estimate = !!metric) %>%
+      dplyr::rename(.estimate = !!yardstick_metric$name) %>%
       dplyr::rename(rename_tuning_args) %>%
-      dplyr::arrange(!!names(rename_tuning_args))
+      dplyr::arrange(!!!names(rename_tuning_args))
 
     scores
   })
@@ -236,13 +206,7 @@ tune_grid_h2o <-
       rlang::eval_tidy()
   )
   attr(resamples, "parameters") <- dials::parameters(param_list)
-
-  if (mode == "classification") {
-    yardstick_metric <- yardstick::metric_set(mn_log_loss)
-  } else {
-    yardstick_metric <- yardstick::metric_set(rsq)
-  }
-  attr(resamples, "metrics") <- yardstick_metric
+  attr(resamples, "metrics") <- yardstick_metric$metric_set
 
   resamples
 }

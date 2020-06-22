@@ -4,7 +4,14 @@
 \alias{tune_grid_h2o}
 \title{Tune h2o models}
 \usage{
-tune_grid_h2o(object, preprocessor = NULL, resamples, grid, verbose = FALSE)
+tune_grid_h2o(
+  object,
+  preprocessor = NULL,
+  resamples,
+  grid,
+  metric,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{object}{A parsnip model spec object.}
@@ -14,6 +21,11 @@ tune_grid_h2o(object, preprocessor = NULL, resamples, grid, verbose = FALSE)
 \item{resamples}{A rset object.}
 
 \item{grid}{A tibble of hyperparameter values.}
+
+\item{metric}{A `character` vector specifying the h2o metric to use as the
+scoring criterion for the hyperparameter tuning. Must be one of  c("rsq",
+"sensitivity", "rmse", "accuracy", "mn_log_loss", "mse"). The default is
+"rsq" for regression models and "mn_log_loss" for classification models.}
 
 \item{verbose}{Whether to provide progress messages.}
 }
@@ -25,12 +37,10 @@ This is a prototype of a version of tune_grid that uses h2o.grid to perform
 hyperparameter tuning.
 }
 \details{
-Current limitations
--------------------
-- Only model arguments can be tuned
-- Parsnip descriptors are not supported
-- Custom metrics are not support. Currently r2 is used for regression and
-logloss is used for classification.
+Limitations
+
+- Only model arguments can be tuned, not arguments
+in the preprocessing recipes.
 - Parsnip only allows `data.frame` and `tbl_spark` objects to be passed
 to the `fit` method, not `H2OFrame` objects.
 }
