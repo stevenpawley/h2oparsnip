@@ -5,6 +5,19 @@
 # h2o.init()
 #
 # object <-
+#   parsnip::rand_forest(mode = "classification", min_n = tune(), mtry = .cols()) %>%
+#   set_engine("h2o", seed = 1234)
+# rec_obj <- iris %>% recipe(Species ~.)
+# object <- workflow() %>%
+#   add_recipe(rec_obj) %>%
+#   add_model(object)
+# grid <- expand.grid(min_n = c(1, 5, 10))
+# resamples <- vfold_cv(iris, v = 2)
+# res <- tune_grid_h2o(object, resamples = resamples, grid = grid)
+# res$.metrics
+#
+#
+# object <-
 #   parsnip::multinom_reg(mode = "classification", penalty = tune(), mixture = tune()) %>%
 #   set_engine("h2o", seed = 1234)
 # rec_obj <- iris %>% recipe(Species ~.)
@@ -28,7 +41,6 @@
 #' Current limitations
 #' -------------------
 #' - Only model arguments can be tuned
-#' - Parsnip descriptors are not supported
 #' - Custom metrics are not support. Currently r2 is used for regression and
 #' logloss is used for classification.
 #' - Parsnip only allows `data.frame` and `tbl_spark` objects to be passed
@@ -86,6 +98,14 @@ tune_grid_h2o <-
   predictors <- prepped_recipe$term_info %>%
     dplyr::filter(role == "predictor") %>%
     dplyr::pull(variable)
+  form <- paste(outcome, "~", paste(predictors, collapse = " + "))
+  form <- as.formula(form)
+
+  # replace descriptors
+  if (parsnip:::requires_descrs(object)) {
+    data_stats <- parsnip:::get_descr_form(form, full_data)
+    parsnip:::scoped_descrs(data_stats)
+  }
 
   # get row indexes of assessment set data for each rsplit
   assessment_indices <- purrr::map(resamples$splits, rsample::complement)
@@ -136,6 +156,7 @@ tune_grid_h2o <-
   model_args <- rename_list(model_args, nm)
   tuning_args <- nm[tune::tune_args(object)$name]
   tuning_args <- as.character(tuning_args)
+  rename_tuning_args <- nm[nm %in% tuning_args]
 
   # convert grid to list
   params <- as.list(grid)
@@ -198,7 +219,9 @@ tune_grid_h2o <-
         .metric = yardstick_name,
         .estimator = if_else(mode == "classification", "multiclass", "standard")
         ) %>%
-      dplyr::rename(.estimate = !!metric)
+      dplyr::rename(.estimate = !!metric) %>%
+      dplyr::rename(rename_tuning_args) %>%
+      dplyr::arrange(!!names(rename_tuning_args))
 
     scores
   })
