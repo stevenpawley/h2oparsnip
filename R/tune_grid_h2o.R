@@ -80,15 +80,15 @@ tune_grid_h2o <-
 
     # get predictor and outcome terms
     outcome <- prepped_recipe$term_info %>%
-      dplyr::filter(role == "outcome") %>%
-      dplyr::pull(variable)
+      dplyr::filter(!!rlang::sym("role") == "outcome") %>%
+      dplyr::pull(!!rlang::sym("variable"))
 
     predictors <- prepped_recipe$term_info %>%
-      dplyr::filter(role == "predictor") %>%
-      dplyr::pull(variable)
+      dplyr::filter(!!rlang::sym("role") == "predictor") %>%
+      dplyr::pull(!!rlang::sym("variable"))
 
     form <- paste(outcome, "~", paste(predictors, collapse = " + "))
-    form <- as.formula(form)
+    form <- stats::as.formula(form)
 
     # replace descriptors
     if (parsnip:::requires_descrs(object)) {
@@ -138,7 +138,7 @@ tune_grid_h2o <-
     }
 
     original_names <- translate_args(model_name) %>%
-      dplyr::select(parsnip, h2o) %>%
+      dplyr::select(dplyr::all_of(c("parsnip", "h2o"))) %>%
       tidyr::drop_na()
 
     nm <- original_names$h2o %>%
@@ -151,7 +151,7 @@ tune_grid_h2o <-
 
     # convert grid to list
     params <- as.list(grid)
-    params <- map(params, ~ .x[!duplicated(.x)])
+    params <- purrr::map(params, ~ .x[!duplicated(.x)])
     params <- rename_list(params, nm)
 
     # get model args
@@ -174,12 +174,12 @@ tune_grid_h2o <-
 
     # fit h2o.grid on each resample
     resamples$.metrics <-
-      map2(assessment_indices, seq_along(assessment_indices), function(ids, n) {
+      purrr::map2(assessment_indices, seq_along(assessment_indices), function(ids, n) {
         if (verbose)
           message(glue::glue("Fitting resample {n}"))
 
         grid_args <- list(
-          grid_id = paste(algorithm, "grid", as.integer(runif(1, 0, 1e9)), sep = "_"),
+          grid_id = paste(algorithm, "grid", as.integer(stats::runif(1, 0, 1e9)), sep = "_"),
           algorithm = algorithm,
           x = predictors,
           y = outcome,
@@ -203,19 +203,16 @@ tune_grid_h2o <-
           scores[[x]] <- gsub("\\]", "", scores[[x]])
         }
 
-        scores <- scores %>%
+        scores %>%
           as_tibble() %>%
-          dplyr::select(-model_ids) %>%
+          dplyr::select(-dplyr::one_of("model_ids")) %>%
           dplyr::mutate_at(tuning_args, as.numeric) %>%
           dplyr::mutate(
             .metric = metric,
-            .estimator = if_else(mode == "classification", "multiclass", "standard")
+            .estimator = dplyr::if_else(mode == "classification", "multiclass", "standard")
           ) %>%
           dplyr::rename(.estimate = !!yardstick_metric$name) %>%
-          dplyr::rename(rename_tuning_args) %>%
-          dplyr::arrange(!!!names(rename_tuning_args))
-
-        scores
+          dplyr::rename(rename_tuning_args)
       })
 
     class(resamples) <- c("tune_results", class(resamples))

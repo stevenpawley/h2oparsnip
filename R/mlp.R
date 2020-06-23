@@ -38,7 +38,7 @@ add_mlp_h2o <- function() {
     parsnip = "epochs",
     original = "epochs",
     func = list(pkg = "dials", fun = "epochs"),
-    has_submodel = TRUE
+    has_submodel = FALSE
   )
   parsnip::set_model_arg(
     model = "mlp",
@@ -272,19 +272,5 @@ h2o_mlp_train <-
       stopping_rounds = stopping_rounds
     )
 
-    res <- make_h2o_call("h2o.deeplearning", args, others)
-
-    if (!"l2" %in% names(res@parameters))
-      res@parameters$l2 <- l2
-
-    if (!"hidden_dropout_ratios" %in% names(res@parameters))
-      res@parameters$hidden_dropout_ratios <- hidden_dropout_ratios
-
-    if (!"activation" %in% names(res@parameters))
-      res@parameters$activation <- activation
-
-    if (!"hidden" %in% names(res@parameters))
-      res@parameters$hidden <- hidden
-
-    res
+    make_h2o_call("h2o.deeplearning", args, others)
   }

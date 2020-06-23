@@ -3,19 +3,20 @@
 #' Calculate the mean squared error. This metric is in squared units of the original data.
 #'
 #' @param data A `data.frame` containing the `truth` and `estimate` columns.
+#' @param truth The column identifier for the true class results (that is a
+#'   factor). This should be an unquoted column name although this argument is
+#'   passed by expression and supports quasiquotation (you can unquote column
+#'   names). For _vec() functions, a factor vector.
+#' @param estimate The column identifier for the predicted class results (that
+#'   is also factor). As with truth this can be specified different ways but the
+#'   primary method is to use an unquoted variable name. For _vec() functions, a
+#'   factor vector.
+#' @param na_rm A logical value indicating whether NA values should be stripped
+#'   before the computation proceeds.
 #' @param ... Not currently used.
 #'
 #' @return A `tibble` with columns `.metric`, `.estimator`, and `.estimate` and 1 row of values.
 #' @export
-mse <- function(data, ...) {
-  UseMethod("mse")
-}
-
-class(mse) <- c("numeric_metric", "function")
-attr(mse, "direction") <- "minimize"
-
-#' @export
-#' @rdname mse
 mse_vec <- function(truth, estimate, na_rm = TRUE, ...) {
   mse_impl <- function(truth, estimate) {
     mean((estimate - truth)^2)
@@ -32,7 +33,17 @@ mse_vec <- function(truth, estimate, na_rm = TRUE, ...) {
 }
 
 #' @export
-#' @rdname mse
+#' @rdname mse_vec
+mse <- function(data, ...) {
+  UseMethod("mse")
+}
+
+class(mse) <- c("numeric_metric", "function")
+attr(mse, "direction") <- "minimize"
+
+
+#' @export
+#' @rdname mse_vec
 mse.data.frame <- function(data, truth, estimate, na_rm = TRUE, ...) {
   yardstick::metric_summarizer(
     metric_nm = "mse",
@@ -52,6 +63,7 @@ mse.data.frame <- function(data, truth, estimate, na_rm = TRUE, ...) {
 #'   "sensitivity", "rmse", "accuracy", "mn_log_loss", "mse")
 #'
 #' @return A list with `name` and `metric_set`
+#' @importFrom yardstick rsq sensitivity rmse accuracy mn_log_loss
 convert_h2o_metrics <- function(metric) {
   supported_metrics = c("rsq", "sensitivity", "rmse", "accuracy", "mn_log_loss", "mse")
 
@@ -61,7 +73,7 @@ convert_h2o_metrics <- function(metric) {
   yardstick_metric <- switch(
     metric,
     rsq = yardstick::metric_set(rsq),
-    sensitivity = yardstick::sensitivity(),
+    sensitivity = yardstick::metric_set(sensitivity),
     rmse = yardstick::metric_set(rmse),
     accuracy = yardstick::metric_set(accuracy),
     mn_log_loss = yardstick::metric_set(mn_log_loss),

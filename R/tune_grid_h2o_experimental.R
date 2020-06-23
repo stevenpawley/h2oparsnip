@@ -28,6 +28,7 @@
 #
 # resamples <- vfold_cv(iris, v = 2)
 # res <- tune_grid_h2o(object, resamples = resamples, grid = grid, metric = "mn_log_loss")
+# res$.metrics
 # collect_metrics(res)
 # attributes(res)
 # select_best(res, metric = "mn_log_loss")

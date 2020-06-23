@@ -61,22 +61,3 @@ tune_results <- tune_grid(
   metrics = metric_set(rmse)
 )
 ```
-
-An example using the mlp model. This also uses a multi_predict method to tune the number of epochs. In contrast to boost_tree which fits the boosted tree model using the maximum number of trees in the parameter grid, mlp uses h2o's checkpoints to perform warm starts, i.e. it can continue training the model with more epochs. This is still faster than restarting training from scratch when hyperparameter tuning for the number of epochs.
-
-```
-mlp_mod <- mlp(mode = "classification", epochs = tune(), hidden_units = tune()) %>%
-  set_engine("h2o")
-rec <- iris %>%
-  recipe(Species ~ .)
-grid <- expand.grid(epochs = c(1, 5, 10), hidden_units = c(25, 50, 100))
-resamples = mc_cv(iris, times = 1)
-
-tune_results <- tune_grid(
-  object = mlp_mod,
-  preprocessor = rec,
-  resamples = resamples,
-  grid = grid,
-  metrics = metric_set(accuracy)
-)
-```

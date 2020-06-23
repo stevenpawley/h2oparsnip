@@ -4,10 +4,13 @@ library(tibble)
 library(magrittr)
 library(h2o)
 
-h2o.init(nthreads = 1)
-iris_df <- as_tibble(iris)
 
 test_that('boost_tree h2o formula method', {
+
+  skip_on_cran()
+
+  h2o.init(nthreads = 1)
+  iris_df <- as_tibble(iris)
 
   # classfication
   h2o_clf_fitted <-
@@ -83,6 +86,12 @@ test_that('boost_tree h2o formula method', {
 })
 
 test_that("boost_tree h2o multi_predict", {
+
+  skip_on_cran()
+
+  h2o.init(nthreads = 1)
+  iris_df <- as_tibble(iris)
+
   clf <-
     boost_tree(
       mode = "classification",

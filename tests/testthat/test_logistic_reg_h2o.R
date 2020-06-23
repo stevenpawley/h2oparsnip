@@ -4,12 +4,15 @@ library(tibble)
 library(magrittr)
 library(h2o)
 
-h2o.init(nthreads = 1)
-iris_df <- as_tibble(iris)
-iris_df <- iris_df[which(iris_df$Species %in% c("setosa", "versicolor")), ]
-iris_df$Species <- droplevels(iris_df$Species)
 
 test_that('logistic_reg h2o formula method', {
+
+  skip_on_cran()
+
+  h2o.init(nthreads = 1)
+  iris_df <- as_tibble(iris)
+  iris_df <- iris_df[which(iris_df$Species %in% c("setosa", "versicolor")), ]
+  iris_df$Species <- droplevels(iris_df$Species)
 
   # classfication
   h2o_clf_fitted <-

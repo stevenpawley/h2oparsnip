@@ -4,10 +4,14 @@ library(tibble)
 library(magrittr)
 library(h2o)
 
-h2o.init(nthreads = 1)
-iris_df <- as_tibble(iris)
 
 test_that("model persistence, model spec", {
+
+  skip_on_cran()
+
+  h2o.init(nthreads = 1)
+  iris_df <- as_tibble(iris)
+
   clf <-
     mlp(mode = "classification") %>%
     set_engine("h2o", seed = 1234)

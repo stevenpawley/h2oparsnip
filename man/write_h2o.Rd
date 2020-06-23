@@ -2,10 +2,25 @@
 % Please edit documentation in R/read_h2o.R
 \name{write_h2o}
 \alias{write_h2o}
+\alias{read_h2o}
+\alias{write_h2o.workflow}
+\alias{write_h2o.model_fit}
+\alias{read_h2o.workflow}
+\alias{read_h2o.model_fit}
 \title{Saves an H2O model to file that is contained within a fitted parsnip model
 specification or contained within a workflow}
 \usage{
-write_h2o(object, filename)
+write_h2o(object, filename, ...)
+
+read_h2o(object, filename, ...)
+
+\method{write_h2o}{workflow}(object, filename, ...)
+
+\method{write_h2o}{model_fit}(object, filename, ...)
+
+\method{read_h2o}{workflow}(object, filename, ...)
+
+\method{read_h2o}{model_fit}(object, filename, ...)
 }
 \arguments{
 \item{object}{Either a `workflows::workflow()` object contained a fitted
@@ -14,6 +29,8 @@ fitted model when using the parsnip package directly.}
 
 \item{filename}{A `character` specifying the file path used to save the
 model. H2O models do not require a specific file extension.}
+
+\item{...}{Currently not used.}
 }
 \value{
 The file path used to save the model.

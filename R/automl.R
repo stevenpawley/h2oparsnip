@@ -7,7 +7,7 @@
 automl <- function(mode = "classification") {
   args <- list()
 
-  new_model_spec(
+  parsnip::new_model_spec(
     "automl",
     args = args,
     eng_args = NULL,

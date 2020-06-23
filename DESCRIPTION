@@ -22,6 +22,7 @@ Imports:
     h2o,
     dials,
     tune,
+    yardstick,
     rsample,
     discrim
 BugReports: https://github.com/stevenpawley/h2oparsnip/issues

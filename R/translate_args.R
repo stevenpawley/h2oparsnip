@@ -1,20 +1,26 @@
 translate_args <- function(model_name) {
 
-  envir <- get_model_env()
+  envir <- parsnip::get_model_env()
 
-  args <-
-    ls(envir) %>%
-    tibble::tibble(name = .) %>%
-    dplyr::filter(grepl("args", name)) %>%
-    dplyr::mutate(model = sub("_args", "", name),
-                  args  = purrr::map(name, ~envir[[.x]])) %>%
-    tidyr::unnest(args) %>%
-    dplyr::select(model:original)
+  args <- tibble::tibble(ls(envir))
+  args <- rlang::set_names(args, "name")
+  args <- args[grepl("args", args$name), ]
+
+  args$model <- sub("_args", "", args$name)
+  args$args <- lapply(args$name, function(x) envir[[x]])
+
+  args <- args %>%
+    tidyr::unnest("args") %>%
+    dplyr::select(!!rlang::sym("model"):!!rlang::sym("original"))
+
+  args <- args[args$model == model_name, ]
 
   args %>%
-    dplyr::filter(grepl(model_name, model)) %>%
-    dplyr::select(-model) %>%
-    tidyr::pivot_wider(names_from = engine, values_from = original)
+    dplyr::select(-dplyr::one_of("model")) %>%
+    tidyr::pivot_wider(
+      names_from = !!rlang::sym("engine"),
+      values_from = !!rlang::sym("original")
+    )
 }
 
 
