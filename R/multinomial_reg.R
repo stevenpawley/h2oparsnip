@@ -1,8 +1,3 @@
-#' Wrapper to add the `h2o` engine to the parsnip `multinom_reg` model
-#' specification
-#'
-#' @return NULL
-#' @export
 add_multinom_reg_h2o <- function() {
 
   parsnip::set_model_engine("multinom_reg", "classification", "h2o")

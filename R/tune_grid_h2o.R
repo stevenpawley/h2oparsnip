@@ -22,11 +22,13 @@
 #'   or no tuning grid is supplied, then a semi-random grid via
 #'   `dials::grid_latin_hypercube` is created based on the specified number of
 #'   tuning iterations (default size = 10).
-#' @param metric A `character` vector specifying the h2o metric to use as the
-#'   scoring criterion for the hyperparameter tuning. Must be one of  c("rsq",
-#'   "sensitivity", "rmse", "accuracy", "mn_log_loss", "mse"). The default is
-#'   "rsq" for regression models and "mn_log_loss" for classification models.
-#' @param verbose Whether to provide progress messages.
+#' @param metrics A `yardstick::metric_set` or NULL. Note that not all yardstick
+#'   metrics can be used with `tune_grid_h2o`. The metrics must be one of
+#'   `yardstick::rsq`, `yardstick::sensitivity`, `yardstick::rmse`,
+#'   `yardstick::accuracy`, `yardstick::mn_log_loss`, or `h2oparsnip::mse`. If
+#'   NULL then the default is `yardstick::rsq` for regression models and
+#'   `yardstick::mn_log_loss` for classification models.
+#' @param ... Not currently used.
 #'
 #' @return
 #' @export
@@ -36,8 +38,8 @@ tune_grid_h2o <-
            resamples,
            param_info = NULL,
            grid = 10,
-           metric = NULL,
-           verbose = FALSE) {
+           metrics = NULL,
+           ...) {
 
     # convert workflow to model_spec and recipe objects
     if (inherits(object, "workflow")) {
@@ -55,16 +57,16 @@ tune_grid_h2o <-
     }
 
     # get model mode
-    mode <- object$mode
+    model_mode <- object$mode
     model_args <- object$args
 
     # process scoring metric
-    if (is.null(metric) & mode == "classification")
-      metric <- "mn_log_loss"
-    if (is.null(metric) & mode == "regression")
-      metric <- "rsq"
+    if (is.null(metrics) & model_mode == "classification")
+      metrics <- metric_set(yardstick::mn_log_loss)
+    if (is.null(metrics) & model_mode == "regression")
+      metrics <- metric_set(yardstick::rsq)
 
-    yardstick_metric <- convert_h2o_metrics(metric)
+    h2o_metrics <- convert_h2o_metrics(metrics)
 
     # extract complete dataset from resamples
     data_train <- rsample::training(resamples$splits[[1]])
@@ -105,37 +107,10 @@ tune_grid_h2o <-
       h2o::as.h2o(full_data, destination_frame = "grid_data")
 
     # translate parsnip arguments to h2o
-    if (inherits(object, "boost_tree")) {
-      model_name <- "boost_tree"
-      algorithm <- "gbm"
-    }
-    if (inherits(object, "rand_forest")) {
-      model_name <- "rand_forest"
-      algorithm <- "randomForest"
-    }
-    if (inherits(object, "linear_reg")) {
-      model_name <- "linear_reg"
-      algorithm <- "glm"
-      model_args$family = "gaussian"
-    }
-    if (inherits(object, "logistic_reg")) {
-      model_name <- "logistic_reg"
-      algorithm <- "glm"
-      model_args$family = "binomial"
-    }
-    if (inherits(object, "multinom_reg")) {
-      model_name <- "multinom_reg"
-      algorithm <- "glm"
-      model_args$family = "multinomial"
-    }
-    if (inherits(object, "mlp")) {
-      model_name <- "mlp"
-      algorithm <- "deeplearning"
-    }
-    if (inherits(object, "naive_Bayes")) {
-      model_name <- "naive_Bayes"
-      algorithm <- "naiveBayes"
-    }
+    alg <- model_spec_to_algorithm(object, model_args)
+    algorithm <- alg[[1]]
+    model_name <- alg[[2]]
+    model_args <- alg[[3]]
 
     original_names <- translate_args(model_name) %>%
       dplyr::select(dplyr::all_of(c("parsnip", "h2o"))) %>%
@@ -173,47 +148,33 @@ tune_grid_h2o <-
       model_args <- NULL
 
     # fit h2o.grid on each resample
-    resamples$.metrics <-
-      purrr::map2(assessment_indices, seq_along(assessment_indices), function(ids, n) {
-        if (verbose)
-          message(glue::glue("Fitting resample {n}"))
+    resamples$.metrics <- purrr::map(assessment_indices, function(ids) {
+      grid_args <- list(
+        grid_id = generate_random_id(glue::glue("{algorithm}_grid")),
+        algorithm = algorithm,
+        x = predictors,
+        y = outcome,
+        training_frame = full_data_h2o[-ids,],
+        validation_frame = full_data_h2o[ids,],
+        hyper_params = params
+      )
 
-        grid_args <- list(
-          grid_id = paste(algorithm, "grid", as.integer(stats::runif(1, 0, 1e9)), sep = "_"),
-          algorithm = algorithm,
-          x = predictors,
-          y = outcome,
-          training_frame = full_data_h2o[-ids, ],
-          validation_frame = full_data_h2o[ids, ],
-          hyper_params = params
+      res <- make_h2o_call("h2o.grid", grid_args, model_args)
+
+      scores_df <-
+        purrr::map2_dfr(
+          h2o_metrics,
+          names(h2o_metrics),
+          extract_h2o_scores,
+          grid_args$grid_id,
+          tuning_args,
+          params,
+          rename_tuning_args,
+          model_mode
         )
 
-        res <- make_h2o_call("h2o.grid", grid_args, model_args)
-
-        scores <- h2o::h2o.getGrid(
-          grid_id = grid_args$grid_id,
-          sort_by = yardstick_metric$name,
-          decreasing = FALSE
-        )
-        scores <- as.data.frame(scores@summary_table)
-        scores[, ncol(scores)] <- as.numeric(scores[, ncol(scores)])
-
-        for (x in names(params)) {
-          scores[[x]] <- gsub("\\[", "", scores[[x]])
-          scores[[x]] <- gsub("\\]", "", scores[[x]])
-        }
-
-        scores %>%
-          as_tibble() %>%
-          dplyr::select(-dplyr::one_of("model_ids")) %>%
-          dplyr::mutate_at(tuning_args, as.numeric) %>%
-          dplyr::mutate(
-            .metric = metric,
-            .estimator = dplyr::if_else(mode == "classification", "multiclass", "standard")
-          ) %>%
-          dplyr::rename(.estimate = !!yardstick_metric$name) %>%
-          dplyr::rename(rename_tuning_args)
-      })
+      return(scores_df)
+    })
 
     class(resamples) <- c("tune_results", class(resamples))
 
@@ -225,7 +186,86 @@ tune_grid_h2o <-
         rlang::eval_tidy()
     )
     attr(resamples, "parameters") <- dials::parameters(param_list)
-    attr(resamples, "metrics") <- yardstick_metric$metric_set
+
+    names(attributes(metrics)$metrics) <-
+      gsub("yardstick::", "", names(attributes(metrics)$metrics))
+    names(attributes(metrics)$metrics) <-
+      gsub("h2oparsnip::", "", names(attributes(metrics)$metrics))
+    attr(resamples, "metrics") <- metrics
 
     resamples
   }
+
+
+extract_h2o_scores <-
+  function(h2o_metric_name,
+           yardstick_metric_name,
+           grid_id,
+           tuning_args,
+           params,
+           rename_tuning_args,
+           model_mode) {
+    scores <- h2o::h2o.getGrid(grid_id = grid_id,
+                               sort_by = h2o_metric_name,
+                               decreasing = FALSE)
+
+    scores <- as.data.frame(scores@summary_table)
+    scores[, ncol(scores)] <-
+      as.numeric(scores[, ncol(scores)])
+
+    for (x in names(params)) {
+      scores[[x]] <- gsub("\\[", "", scores[[x]])
+      scores[[x]] <- gsub("\\]", "", scores[[x]])
+    }
+
+    scores <- scores %>%
+      as_tibble() %>%
+      dplyr::select(-dplyr::one_of("model_ids")) %>%
+      dplyr::mutate_at(tuning_args, as.numeric) %>%
+      dplyr::mutate(
+        .metric = yardstick_metric_name,
+        .estimator = dplyr::if_else(model_mode == "classification", "multiclass", "standard")
+      ) %>%
+      dplyr::rename(.estimate = !!h2o_metric_name) %>%
+      dplyr::rename(dplyr::all_of(rename_tuning_args))
+
+    return(scores)
+  }
+
+
+model_spec_to_algorithm <- function(object, model_args) {
+
+  if (inherits(object, "boost_tree")) {
+    model_name <- "boost_tree"
+    algorithm <- "gbm"
+  }
+  if (inherits(object, "rand_forest")) {
+    model_name <- "rand_forest"
+    algorithm <- "randomForest"
+  }
+  if (inherits(object, "linear_reg")) {
+    model_name <- "linear_reg"
+    algorithm <- "glm"
+    model_args$family = "gaussian"
+  }
+  if (inherits(object, "logistic_reg")) {
+    model_name <- "logistic_reg"
+    algorithm <- "glm"
+    model_args$family = "binomial"
+  }
+  if (inherits(object, "multinom_reg")) {
+    model_name <- "multinom_reg"
+    algorithm <- "glm"
+    model_args$family = "multinomial"
+  }
+  if (inherits(object, "mlp")) {
+    model_name <- "mlp"
+    algorithm <- "deeplearning"
+  }
+  if (inherits(object, "naive_Bayes")) {
+    model_name <- "naive_Bayes"
+    algorithm <- "naiveBayes"
+  }
+
+  return(list(algorithm, model_name, model_args))
+}

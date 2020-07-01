@@ -1,7 +1,3 @@
-#' Wrapper to add the `h2o` engine to the parsnip `mlp` model specification
-#'
-#' @return NULL
-#' @export
 add_mlp_h2o <- function() {
 
   parsnip::set_model_engine("mlp", "classification", "h2o")

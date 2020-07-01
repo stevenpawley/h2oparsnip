@@ -10,8 +10,8 @@ tune_grid_h2o(
   resamples,
   param_info = NULL,
   grid = 10,
-  metric = NULL,
-  verbose = FALSE
+  metrics = NULL,
+  ...
 )
 }
 \arguments{
@@ -33,12 +33,14 @@ or no tuning grid is supplied, then a semi-random grid via
 `dials::grid_latin_hypercube` is created based on the specified number of
 tuning iterations (default size = 10).}
 
-\item{metric}{A `character` vector specifying the h2o metric to use as the
-scoring criterion for the hyperparameter tuning. Must be one of  c("rsq",
-"sensitivity", "rmse", "accuracy", "mn_log_loss", "mse"). The default is
-"rsq" for regression models and "mn_log_loss" for classification models.}
+\item{metrics}{A `yardstick::metric_set` or NULL. Note that not all yardstick
+metrics can be used with `tune_grid_h2o`. The metrics must be one of
+`yardstick::rsq`, `yardstick::sensitivity`, `yardstick::rmse`,
+`yardstick::accuracy`, `yardstick::mn_log_loss`, or `h2oparsnip::mse`. If
+NULL then the default is `yardstick::rsq` for regression models and
+`yardstick::mn_log_loss` for classification models.}
 
-\item{verbose}{Whether to provide progress messages.}
+\item{...}{Not currently used.}
 }
 \value{
 

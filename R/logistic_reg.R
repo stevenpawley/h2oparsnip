@@ -1,8 +1,3 @@
-#' Wrapper to add the `h2o` engine to the parsnip `logistic_reg` model
-#' specification
-#'
-#' @return NULL
-#' @export
 add_logistic_reg_h2o <- function() {
 
   parsnip::set_model_engine("logistic_reg", "classification", "h2o")

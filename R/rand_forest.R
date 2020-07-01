@@ -1,8 +1,3 @@
-#' Wrapper to add the `h2o` engine to the parsnip `rand_forest` model
-#' specification
-#'
-#' @return NULL
-#' @export
 add_rand_forest_h2o <- function() {
 
   parsnip::set_model_engine("rand_forest", "classification", "h2o")

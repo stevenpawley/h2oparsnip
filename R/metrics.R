@@ -56,40 +56,41 @@ mse.data.frame <- function(data, truth, estimate, na_rm = TRUE, ...) {
   )
 }
 
-#' Converts metrics that are applicable to h2o.getGrid into equivalent yardstick
-#' `metric_set` objects.
-#'
-#' @param metric A character vector of the yardstick metric, one of c("rsq",
-#'   "sensitivity", "rmse", "accuracy", "mn_log_loss", "mse")
-#'
-#' @return A list with `name` and `metric_set`
 #' @importFrom yardstick rsq sensitivity rmse accuracy mn_log_loss
-convert_h2o_metrics <- function(metric) {
-  supported_metrics = c("rsq", "sensitivity", "rmse", "accuracy", "mn_log_loss", "mse")
+convert_h2o_metrics <- function(metrics) {
 
-  if (!metric %in% supported_metrics)
-    rlang::abort(paste("metric must be one of the following supported metrics:", supported_metrics))
-
-  yardstick_metric <- switch(
-    metric,
-    rsq = yardstick::metric_set(rsq),
-    sensitivity = yardstick::metric_set(sensitivity),
-    rmse = yardstick::metric_set(rmse),
-    accuracy = yardstick::metric_set(accuracy),
-    mn_log_loss = yardstick::metric_set(mn_log_loss),
-    mse = yardstick::metric_set(mse)
+  allowed_metrics <- c(
+    "yardstick::rsq",
+    "yardstick::sensitivity",
+    "yardstick::rmse",
+    "yardstick::accuracy",
+    "yardstick::mn_log_loss",
+    "h2oparsnip::mse"
   )
+  allowed_metrics <-
+    c(allowed_metrics, gsub("yardstick::", "", allowed_metrics))
 
-  h2o_name <- switch(
-    metric,
-    rsq = "r2",
-    sensitivity = "max_per_class_error",
-    rmse = "rmse",
-    accuracy = "accuracy",
-    mn_log_loss = "logloss",
-    mse = "mse"
+  if (any(!names(attributes(metrics)$metrics) %in% allowed_metrics)) {
+    msg <- "`metrics` argument must contain a `yardstick::metric_set` with one or
+      several of the following metrics:"
+    rlang::abort(paste(msg, allowed_metrics))
+  }
 
-  )
+  metric_names <- names(attributes(metrics)$metric)
+  metric_names <- gsub("yardstick::", "", metric_names)
+  metric_names <- gsub("h2oparsnip::", "", metric_names)
 
-  list(name = h2o_name, metric_set = yardstick_metric)
+  convert_metric <- function(yardstick_name) {
+    switch(
+      yardstick_name,
+      rsq = "r2",
+      sensitivity = "max_per_class_error",
+      rmse = "rmse",
+      accuracy = "accuracy",
+      mn_log_loss = "logloss",
+      mse = "mse"
+    )
+  }
+
+  sapply(metric_names, convert_metric)
 }

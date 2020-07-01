@@ -1,8 +1,3 @@
-#' Wrapper to add the `h2o` engine to the parsnip `boost_tree` model
-#' specification
-#'
-#' @return NULL
-#' @export
 add_boost_tree_h2o <- function() {
 
   parsnip::set_model_engine("boost_tree", "classification", "h2o")

@@ -1,8 +1,3 @@
-#' Wrapper to add the `h2o` engine to the parsnip `linear_reg` model
-#' specification
-#'
-#' @return NULL
-#' @export
 add_linear_reg_h2o <- function() {
 
   parsnip::set_model_engine("linear_reg", "regression", "h2o")

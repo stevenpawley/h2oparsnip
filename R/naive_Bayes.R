@@ -1,7 +1,3 @@
-#' Wrapper to add the `h2o` engine to the discrim `naiveBayes` model specification
-#'
-#' @return NULL
-#' @export
 add_naive_Bayes_h2o <- function() {
 
   parsnip::set_model_engine("naive_Bayes", "classification", "h2o")

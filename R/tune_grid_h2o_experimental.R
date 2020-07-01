@@ -13,9 +13,15 @@
 #   add_model(object)
 # grid <- expand.grid(min_n = c(1, 5, 10))
 # resamples <- vfold_cv(iris, v = 2)
-# res <- tune_grid_h2o(object, resamples = resamples, grid = grid, metric = "accuracy")
+# res <-
+#   tune_grid_h2o(
+#     object,
+#     resamples = resamples,
+#     grid = grid,
+#     metrics = metric_set(accuracy, mn_log_loss)
+#   )
 # res$.metrics
-# select_best(res, metric = "accuracy")
+# select_best(res, metric = "mn_log_loss")
 #
 # object <-
 #   parsnip::multinom_reg(mode = "classification", penalty = tune(), mixture = tune()) %>%
@@ -27,7 +33,11 @@
 # grid <- expand.grid(penalty = c(0.1, 1), mixture = c(0.1, 0.3, 0.5, 0.7, 1.0))
 #
 # resamples <- vfold_cv(iris, v = 2)
-# res <- tune_grid_h2o(object, resamples = resamples, grid = grid, metric = "mn_log_loss")
+# res <-
+#   tune_grid_h2o(object,
+#                 resamples = resamples,
+#                 grid = grid,
+#                 metrics = metric_set(yardstick::mn_log_loss))
 # res$.metrics
 # collect_metrics(res)
 # attributes(res)
