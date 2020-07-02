@@ -41,19 +41,22 @@ tune_grid_h2o <-
            metrics = NULL,
            ...) {
 
-    # convert workflow to model_spec and recipe objects
+    # some checks
     if (inherits(object, "workflow")) {
       preprocessor <- workflows::pull_workflow_preprocessor(object)
       object <- workflows::pull_workflow_spec(object)
     }
 
-    # tuning grid
     if (is.null(param_info)) {
       param_info <- tune::parameters(object)
     }
 
     if (inherits(grid, "numeric")) {
       grid <- dials::grid_latin_hypercube(param_info, size = grid)
+    }
+
+    if (!inherits(metrics, "metric_set")) {
+      rlang::abort("argument `metrics` must be a `yardstick::metric_set`")
     }
 
     # get model mode
@@ -65,7 +68,6 @@ tune_grid_h2o <-
       metrics <- metric_set(yardstick::mn_log_loss)
     if (is.null(metrics) & model_mode == "regression")
       metrics <- metric_set(yardstick::rsq)
-
     h2o_metrics <- convert_h2o_metrics(metrics)
 
     # extract complete dataset from resamples
@@ -144,8 +146,9 @@ tune_grid_h2o <-
     model_args <- model_args[!names(model_args) %in% tuning_args]
     model_args <- append(model_args, object$eng_args)
 
-    if (length(model_args) == 0)
+    if (length(model_args) == 0) {
       model_args <- NULL
+    }
 
     # fit h2o.grid on each resample
     resamples$.metrics <- purrr::map(assessment_indices, function(ids) {
