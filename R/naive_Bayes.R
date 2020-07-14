@@ -28,7 +28,11 @@ add_naive_Bayes_h2o <- function() {
     model = "naive_Bayes",
     eng = "h2o",
     mode = "classification",
-    options = list(predictor_indicators = FALSE)
+    options = list(
+      predictor_indicators = "none",
+      compute_intercept = FALSE,
+      remove_intercept = FALSE
+    )
   )
 
   # classification predict

@@ -54,13 +54,21 @@ add_rand_forest_h2o <- function() {
     model = "rand_forest",
     eng = "h2o",
     mode = "classification",
-    options = list(predictor_indicators = FALSE)
+    options = list(
+      predictor_indicators = "none",
+      compute_intercept = FALSE,
+      remove_intercept = FALSE
+    )
   )
   parsnip::set_encoding(
     model = "rand_forest",
     eng = "h2o",
     mode = "regression",
-    options = list(predictor_indicators = FALSE)
+    options = list(
+      predictor_indicators = "none",
+      compute_intercept = FALSE,
+      remove_intercept = FALSE
+    )
   )
 
   # regression predict

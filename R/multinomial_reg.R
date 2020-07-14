@@ -32,6 +32,16 @@ add_multinom_reg_h2o <- function() {
       )
     )
   )
+  parsnip::set_encoding(
+    model = "multinom_reg",
+    eng = "h2o",
+    mode = "classification",
+    options = list(
+      predictor_indicators = "none",
+      compute_intercept = FALSE,
+      remove_intercept = FALSE
+    )
+  )
 
   # classification predict
   parsnip::set_pred(

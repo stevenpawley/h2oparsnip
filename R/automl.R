@@ -73,13 +73,21 @@ add_automl <- function() {
     model = "automl",
     eng = "h2o",
     mode = "regression",
-    options = list(predictor_indicators = FALSE)
+    options = list(
+      predictor_indicators = "none",
+      compute_intercept = FALSE,
+      remove_intercept = FALSE
+    )
   )
   parsnip::set_encoding(
     model = "automl",
     eng = "h2o",
     mode = "classification",
-    options = list(predictor_indicators = FALSE)
+    options = list(
+      predictor_indicators = "none",
+      compute_intercept = FALSE,
+      remove_intercept = FALSE
+    )
   )
 
   # regression predict

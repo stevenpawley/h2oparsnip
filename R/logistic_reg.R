@@ -36,7 +36,11 @@ add_logistic_reg_h2o <- function() {
     model = "logistic_reg",
     eng = "h2o",
     mode = "classification",
-    options = list(predictor_indicators = FALSE)
+    options = list(
+      predictor_indicators = "none",
+      compute_intercept = FALSE,
+      remove_intercept = FALSE
+    )
   )
 
   # classification predict

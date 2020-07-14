@@ -36,7 +36,11 @@ add_linear_reg_h2o <- function() {
     model = "linear_reg",
     eng = "h2o",
     mode = "regression",
-    options = list(predictor_indicators = FALSE)
+    options = list(
+      predictor_indicators = "none",
+      compute_intercept = FALSE,
+      remove_intercept = FALSE
+    )
   )
 
   # regression predict
