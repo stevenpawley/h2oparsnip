@@ -97,7 +97,8 @@ add_boost_tree_h2o <- function() {
     options = list(
       predictor_indicators = "none",
       compute_intercept = FALSE,
-      remove_intercept = FALSE
+      remove_intercept = FALSE,
+      allow_sparse_x = FALSE
     )
   )
   parsnip::set_encoding(
@@ -107,7 +108,8 @@ add_boost_tree_h2o <- function() {
     options = list(
       predictor_indicators = "none",
       compute_intercept = FALSE,
-      remove_intercept = FALSE
+      remove_intercept = FALSE,
+      allow_sparse_x = FALSE
     )
   )
 
