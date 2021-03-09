@@ -59,6 +59,17 @@ tune_grid_h2o <-
       rlang::abort("argument `metrics` must be a `yardstick::metric_set`")
     }
 
+    metric_attrs <- attributes(metrics)
+    metric_names <- names(metric_attrs$metrics)
+    permitted_metrics <- c("rsq", "sensitivity", "rmse", "accuracy", "mn_log_loss",
+                           "mse")
+    if (!all(metric_names %in% permitted_metrics)) {
+      rlang::abort(paste(
+        "`metrics` must be a `yardstick::metric_set` object with at least one of",
+        paste(paste0("'", permitted_metrics, "'"), collapse = ", ")
+      ))
+    }
+
     # get model mode
     model_mode <- object$mode
     model_args <- object$args
