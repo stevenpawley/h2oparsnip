@@ -11,6 +11,7 @@ tune_grid_h2o(
   param_info = NULL,
   grid = 10,
   metrics = NULL,
+  control = control_h2o(),
   ...
 )
 }
@@ -39,6 +40,8 @@ metrics can be used with `tune_grid_h2o`. The metrics must be one of
 `yardstick::accuracy`, `yardstick::mn_log_loss`, or `h2oparsnip::mse`. If
 NULL then the default is `yardstick::rsq` for regression models and
 `yardstick::mn_log_loss` for classification models.}
+
+\item{control}{An object used to modify the tuning process.}
 
 \item{...}{Not currently used.}
 }

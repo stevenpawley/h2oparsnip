@@ -28,6 +28,7 @@
 #'   `yardstick::accuracy`, `yardstick::mn_log_loss`, or `h2oparsnip::mse`. If
 #'   NULL then the default is `yardstick::rsq` for regression models and
 #'   `yardstick::mn_log_loss` for classification models.
+#' @param control An object used to modify the tuning process.
 #' @param ... Not currently used.
 #'
 #' @return
@@ -39,6 +40,7 @@ tune_grid_h2o <-
            param_info = NULL,
            grid = 10,
            metrics = NULL,
+           control = control_h2o(),
            ...) {
 
     # some checks
@@ -69,6 +71,10 @@ tune_grid_h2o <-
         paste(paste0("'", permitted_metrics, "'"), collapse = ", ")
       ))
     }
+
+    # tuning control options
+    if (isFALSE(control$verbose))
+      h2o::h2o.no_progress()
 
     # get model mode
     model_mode <- object$mode
@@ -162,33 +168,59 @@ tune_grid_h2o <-
     }
 
     # fit h2o.grid on each resample
-    resamples$.metrics <- purrr::map(assessment_indices, function(ids) {
+    grid_ids <-
+      replicate(length(assessment_indices), generate_random_id(glue::glue("{algorithm}_grid")))
+
+    resamples$.metrics <- purrr::map2(assessment_indices, grid_ids, function(ids, grid_id) {
       grid_args <- list(
-        grid_id = generate_random_id(glue::glue("{algorithm}_grid")),
+        grid_id = grid_id,
         algorithm = algorithm,
         x = predictors,
         y = outcome,
         training_frame = full_data_h2o[-ids,],
         validation_frame = full_data_h2o[ids,],
-        hyper_params = params
+        hyper_params = params,
+        keep_cross_validation_predictions = FALSE,
+        keep_cross_validation_models = FALSE
       )
 
+      # set control options
+      if (control$save_pred)
+        grid_args$keep_cross_validation_predictions = TRUE
+
+      # call h2o.grid
       res <- make_h2o_call("h2o.grid", grid_args, model_args)
 
-      scores_df <-
-        purrr::map2_dfr(
-          h2o_metrics,
-          names(h2o_metrics),
-          extract_h2o_scores,
-          grid_args$grid_id,
-          tuning_args,
-          params,
-          rename_tuning_args,
-          model_mode
-        )
-
+      # extract the scores from the cross-validation predictions
+      scores_df <- purrr::map2_dfr(.x = h2o_metrics, .y = names(h2o_metrics),
+                                   .f = extract_h2o_scores, grid_args$grid_id,
+                                   tuning_args, params, rename_tuning_args, model_mode)
       return(scores_df)
     })
+
+    # optionally extract the predictions
+    if (control$save_pred) {
+      resamples$.predictions <- map2(assessment_indices, grid_ids, function(ids, grid_id) {
+        grid <- h2o::h2o.getGrid(grid_id)
+        model_ids <- as.character(grid@model_ids)
+        grid_args <- grid@summary_table[names(params)]
+        grid_args <- dplyr::rename(grid_args, dplyr::all_of(rename_tuning_args))
+
+        purrr::map_dfr(seq_along(model_ids), function(i) {
+          model <- h2o.getModel(model_ids[[i]])
+          args <- grid_args[i, ]
+          preds <- tibble::as_tibble(predict(model, full_data_h2o[ids, ]))
+
+          if (model_mode == "classification") {
+            names(preds) <- ".pred_class"
+          } else {
+            names(preds) <- ".pred"
+          }
+          bind_cols(preds, args, .row = ids)
+        })
+
+      })
+    }
 
     class(resamples) <- c("tune_results", class(resamples))
 
@@ -219,11 +251,11 @@ extract_h2o_scores <-
            params,
            rename_tuning_args,
            model_mode) {
-    scores <- h2o::h2o.getGrid(grid_id = grid_id,
+    grid <- h2o::h2o.getGrid(grid_id = grid_id,
                                sort_by = h2o_metric_name,
                                decreasing = FALSE)
 
-    scores <- as.data.frame(scores@summary_table)
+    scores <- as.data.frame(grid@summary_table)
     scores[, ncol(scores)] <-
       as.numeric(scores[, ncol(scores)])
 
@@ -232,6 +264,7 @@ extract_h2o_scores <-
       scores[[x]] <- gsub("\\]", "", scores[[x]])
     }
 
+    # create the tune-like resamples object
     scores <- scores %>%
       as_tibble() %>%
       dplyr::select(-dplyr::one_of("model_ids")) %>%

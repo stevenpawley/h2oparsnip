@@ -188,7 +188,7 @@ h2o_automl_train <- function(formula, data, ...) {
   X <- attr(stats::terms(formula, data = data), "term.labels")
   y <- all.vars(formula)[1]
 
-  # convert to H2OFrame
+  # convert to H2OFrame (although parsnip doesn't support H2OFrames right now)
   if (!inherits(data, "H2OFrame"))
     data <- h2o::as.h2o(data)
 

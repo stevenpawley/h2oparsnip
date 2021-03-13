@@ -227,6 +227,7 @@ h2o_mlp_train <-
       valid <- NULL
     }
 
+    # convert to H2OFrame (although parsnip doesn't support H2OFrames right now)
     if (!inherits(data, "H2OFrame"))
       data <- h2o::as.h2o(data)
 
