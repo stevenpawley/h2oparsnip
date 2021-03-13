@@ -200,7 +200,7 @@ tune_grid_h2o <-
 
     # optionally extract the predictions
     if (control$save_pred) {
-      resamples$.predictions <- map2(assessment_indices, grid_ids, function(ids, grid_id) {
+      resamples$.predictions <- purrr::map2(assessment_indices, grid_ids, function(ids, grid_id) {
         grid <- h2o::h2o.getGrid(grid_id)
         model_ids <- as.character(grid@model_ids)
         grid_args <- grid@summary_table[names(params)]
@@ -216,16 +216,21 @@ tune_grid_h2o <-
           } else {
             names(preds) <- ".pred"
           }
-          bind_cols(preds, args, .row = ids)
+          dplyr::bind_cols(preds, args, .row = ids)
         })
 
       })
     }
 
+    # add the .notes column (empty for now)
+    notes <- tibble::tibble(.notes = replicate(nrow(resamples), character()))
+    resamples <- dplyr::bind_cols(resamples, notes)
+
+    # create a `tune_results` class
     class(resamples) <- c("tune_results", class(resamples))
 
     arg_names <- names(grid)
-    param_list <- map(
+    param_list <- purrr::map(
       arg_names,
       ~ glue::glue("dials::{.x}()") %>%
         rlang::parse_expr() %>%
