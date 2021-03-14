@@ -7,7 +7,7 @@
 control_h2o(
   verbose = FALSE,
   save_pred = FALSE,
-  save_workflow = FALSE,
+  save_models = FALSE,
   event_level = "first"
 )
 }
@@ -16,6 +16,10 @@ control_h2o(
 
 \item{save_pred}{A logical for whether the out-of-sample predictions should be saved
 for each model evaluated.}
+
+\item{save_models}{A logical for whether to retain the models associated with the
+tuning and resampling iterations within the h2o cluster and append their h2o model
+ids to the resamples object as a '.models' column.}
 
 \item{event_level}{A single string containing either "first" or "second". This
 argument is passed on to yardstick metric functions when any type of class
