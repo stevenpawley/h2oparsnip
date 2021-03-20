@@ -56,24 +56,31 @@ mse.data.frame <- function(data, truth, estimate, na_rm = TRUE, ...) {
   )
 }
 
-#' @importFrom yardstick rsq sensitivity rmse accuracy mn_log_loss
+#' @importFrom yardstick rsq rmse accuracy mn_log_loss pr_auc roc_auc
 convert_h2o_metrics <- function(metrics) {
 
   allowed_metrics <- c(
+    # regression
     "yardstick::rsq",
-    "yardstick::sensitivity",
     "yardstick::rmse",
+    "h2oparsnip::mse",
+
+    # classification
     "yardstick::accuracy",
     "yardstick::mn_log_loss",
-    "h2oparsnip::mse"
+    "yardstick::pr_auc",
+    "yardstick::roc_auc"
   )
+
   allowed_metrics <-
     c(allowed_metrics, gsub("yardstick::", "", allowed_metrics))
+  allowed_metrics <-
+    c(allowed_metrics, gsub("h2oparsnip::", "", allowed_metrics))
 
   if (any(!names(attributes(metrics)$metrics) %in% allowed_metrics)) {
     msg <- "`metrics` argument must contain a `yardstick::metric_set` with one or
       several of the following metrics:"
-    rlang::abort(paste(msg, allowed_metrics))
+    rlang::abort(paste(msg, paste(allowed_metrics, collapse = ", ")))
   }
 
   metric_names <- names(attributes(metrics)$metric)
@@ -83,12 +90,16 @@ convert_h2o_metrics <- function(metrics) {
   convert_metric <- function(yardstick_name) {
     switch(
       yardstick_name,
+      # regression
       rsq = "r2",
-      sensitivity = "max_per_class_error",
       rmse = "rmse",
+      mse = "mse",
+
+      # classification
       accuracy = "accuracy",
       mn_log_loss = "logloss",
-      mse = "mse"
+      roc_auc = "auc",
+      pr_auc = "aucpr"
     )
   }
 

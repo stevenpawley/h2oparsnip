@@ -4,7 +4,7 @@
 \alias{extract_h2o_preds}
 \title{Extract the predictions for each tuning grid from the h2o cluster}
 \usage{
-extract_h2o_preds(test_indices, grid_ids, data, rename_args)
+extract_h2o_preds(test_indices, grid_ids, data, rename_args, model_mode)
 }
 \arguments{
 \item{test_indices}{A numeric vector if the row numbers of the H2OFrame that represent
