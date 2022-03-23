@@ -28,4 +28,4 @@ Imports:
     rsample,
     discrim
 BugReports: https://github.com/stevenpawley/h2oparsnip/issues
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
