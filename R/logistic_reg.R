@@ -1,5 +1,4 @@
 add_logistic_reg_h2o <- function() {
-
   parsnip::set_model_engine("logistic_reg", "classification", "h2o")
   parsnip::set_dependency("logistic_reg", "h2o", "h2o")
 

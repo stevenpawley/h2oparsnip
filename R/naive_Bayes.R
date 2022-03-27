@@ -1,5 +1,4 @@
 add_naive_Bayes_h2o <- function() {
-
   parsnip::set_model_engine("naive_Bayes", "classification", "h2o")
   parsnip::set_dependency("naive_Bayes", "h2o", "h2o")
 
@@ -90,16 +89,15 @@ add_naive_Bayes_h2o <- function() {
 #' @param formula formula
 #' @param data data.frame of training data
 #' @param laplace numeric, the Laplace smoothing parameter, must be >= 0.
-#' @param ... other arguments not currently used
+#' @param ... other arguments passed to the h2o engine.
 #'
-#' @return evaluated h2o model call
+#' @return a fitted h2o model.
 #' @export
 h2o_naiveBayes_train <-
   function(formula,
            data,
            laplace = 0,
            ...) {
-
     others <- list(...)
 
     # get term names and convert to h2o
@@ -107,12 +105,14 @@ h2o_naiveBayes_train <-
     y <- all.vars(formula)[1]
 
     # convert to H2OFrame (although parsnip doesn't support H2OFrames right now)
-    if (!inherits(data, "H2OFrame"))
+    if (!inherits(data, "H2OFrame")) {
       data <- h2o::as.h2o(data)
+    }
 
     # check arguments
-    if (laplace < 0)
+    if (laplace < 0) {
       laplace <- 0
+    }
 
     # define arguments
     args <- list(

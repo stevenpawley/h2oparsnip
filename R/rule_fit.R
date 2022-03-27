@@ -1,5 +1,4 @@
 add_rule_fit_h2o <- function() {
-
   parsnip::set_model_engine("rule_fit", "classification", "h2o")
   parsnip::set_model_engine("rule_fit", "regression", "h2o")
   parsnip::set_dependency("rule_fit", "h2o", "h2o")
@@ -173,7 +172,6 @@ h2o_rulefit_train <-
            max_rule_length = 3,
            lambda = 0,
            ...) {
-
     others <- list(...)
 
     # get term names and convert to h2o
@@ -181,8 +179,9 @@ h2o_rulefit_train <-
     y <- all.vars(formula)[1]
 
     # convert to H2OFrame (although parsnip doesn't support H2OFrames right now)
-    if (!inherits(data, "H2OFrame"))
+    if (!inherits(data, "H2OFrame")) {
       data <- h2o::as.h2o(data)
+    }
 
     # define arguments
     args <- list(

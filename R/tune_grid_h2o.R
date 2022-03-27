@@ -4,30 +4,32 @@
 #' hyperparameter tuning.
 #'
 #' @section Limitations:
-#' - Only model arguments can be tuned, not arguments in the preprocessing recipes.
+#' - Only model arguments can be tuned, not arguments in the preprocessing
+#' recipes.
 #'
-#' - Parsnip only allows `data.frame` and `tbl_spark` objects to be passed
-#' to the `fit` method, not `H2OFrame` objects.
+#' - Parsnip only allows `data.frame` and `tbl_spark` objects to be passed to
+#' the `fit` method, not `H2OFrame` objects.
 #'
 #' @param object A parsnip `model_spec` object.
 #' @param preprocessor A `recipe` object.
 #' @param resamples An `rset` object.
 #' @param param_info A `dials::parameters()` object or NULL. If none is given, a
-#'   parameters set is derived from other arguments. Passing this argument can be useful
-#'   when parameter ranges need to be customized.
-#' @param grid A `data.frame` of tuning combinations or a positive integer. The data
-#'   frame should have columns for each parameter being tuned and rows for tuning
-#'   parameter candidates. An integer denotes the number of candidate parameter sets to
-#'   be created automatically. If a positive integer is used or no tuning grid is
-#'   supplied, then a semi-random grid via `dials::grid_latin_hypercube` is created based
-#'   on the specified number of tuning iterations (default size = 10).
-#' @param metrics A `yardstick::metric_set` or NULL. Note that not all yardstick metrics
-#'   can be used with `tune_grid_h2o`. The metrics must be one of `yardstick::rsq`,
-#'   `yardstick::rmse` or `h2oparsnip::mse` for regression models, and
-#'   `yardstick::accuracy`, `yardstick::mn_log_loss`, `yardstick::roc_auc` or
-#'   `yardstick::pr_auc` for classification models. If NULL then the default is
-#'   `yardstick::rsq` for regression models and `yardstick::mn_log_loss` for
-#'   classification models.
+#'   parameters set is derived from other arguments. Passing this argument can
+#'   be useful when parameter ranges need to be customized.
+#' @param grid A `data.frame` of tuning combinations or a positive integer. The
+#'   data frame should have columns for each parameter being tuned and rows for
+#'   tuning parameter candidates. An integer denotes the number of candidate
+#'   parameter sets to be created automatically. If a positive integer is used
+#'   or no tuning grid is supplied, then a semi-random grid via
+#'   `dials::grid_latin_hypercube` is created based on the specified number of
+#'   tuning iterations (default size = 10).
+#' @param metrics A `yardstick::metric_set` or NULL. Note that not all yardstick
+#'   metrics can be used with `tune_grid_h2o`. The metrics must be one of
+#'   `yardstick::rsq`, `yardstick::rmse` or `h2oparsnip::mse` for regression
+#'   models, and `yardstick::accuracy`, `yardstick::mn_log_loss`,
+#'   `yardstick::roc_auc` or `yardstick::pr_auc` for classification models. If
+#'   NULL then the default is `yardstick::rsq` for regression models and
+#'   `yardstick::mn_log_loss` for classification models.
 #' @param control An object used to modify the tuning process.
 #' @param ... Not currently used.
 #'
@@ -49,22 +51,26 @@ tune_grid_h2o <-
       object <- workflows::pull_workflow_spec(object)
     }
 
-    if (is.null(param_info))
+    if (is.null(param_info)) {
       param_info <- tune::parameters(object)
+    }
 
-    if (inherits(grid, "numeric"))
+    if (inherits(grid, "numeric")) {
       grid <- dials::grid_latin_hypercube(param_info, size = grid)
+    }
 
-    if (!inherits(metrics, "metric_set"))
+    if (!inherits(metrics, "metric_set")) {
       rlang::abort("argument `metrics` must be a `yardstick::metric_set`")
+    }
 
     # check for supported scoring metrics
     metric_attrs <- attributes(metrics)
     metric_names <- names(metric_attrs$metrics)
 
     # tuning control options
-    if (isFALSE(control$verbose))
+    if (isFALSE(control$verbose)) {
       h2o::h2o.no_progress()
+    }
 
     # get model mode
     model_mode <- object$mode
@@ -73,10 +79,12 @@ tune_grid_h2o <-
     model_args <- object$args
 
     # process scoring metric
-    if (is.null(metrics) & model_mode == "classification")
+    if (is.null(metrics) & model_mode == "classification") {
       metrics <- metric_set(yardstick::mn_log_loss)
-    if (is.null(metrics) & model_mode == "regression")
+    }
+    if (is.null(metrics) & model_mode == "regression") {
       metrics <- metric_set(yardstick::rsq)
+    }
     h2o_metrics <- convert_h2o_metrics(metrics)
 
     # extract complete dataset from resamples
@@ -87,8 +95,11 @@ tune_grid_h2o <-
     full_data <- as_tibble(full_data[order(row_order), ])
 
     # prep the recipe
-    prepped_recipe <- preprocessor %>% recipes::prep()
-    full_data <- prepped_recipe %>% recipes::bake(full_data)
+    prepped_recipe <- preprocessor %>%
+      recipes::prep(training = full_data, retain = TRUE)
+
+    full_data <- prepped_recipe %>%
+      recipes::bake(new_data = NULL)
 
     # get predictor and outcome terms
     outcome <- prepped_recipe$term_info %>%
@@ -150,12 +161,18 @@ tune_grid_h2o <-
     model_args <- model_args[!names(model_args) %in% tuning_args]
     model_args <- append(model_args, object$eng_args)
 
-    if (length(model_args) == 0)
+    if (length(model_args) == 0) {
       model_args <- NULL
+    }
 
     # fit h2o.grid on each resample
-    grid_ids <- replicate(length(assessment_indices),
-                          generate_random_id(glue::glue("{algorithm}_grid")))
+    grid_ids <- replicate(
+      length(assessment_indices),
+      generate_random_id(glue::glue("{algorithm}_grid"))
+    )
+
+    search_criteria <-
+      list(strategy = "RandomDiscrete", max_models = nrow(grid))
 
     resamples$.metrics <-
       purrr::map2(assessment_indices, grid_ids, function(ids, grid_id) {
@@ -164,30 +181,37 @@ tune_grid_h2o <-
           algorithm = algorithm,
           x = predictors,
           y = outcome,
-          training_frame = full_data_h2o[-ids,],
-          validation_frame = full_data_h2o[ids,],
+          training_frame = full_data_h2o[-ids, ],
+          validation_frame = full_data_h2o[ids, ],
           hyper_params = params,
           keep_cross_validation_predictions = FALSE,
-          keep_cross_validation_models = FALSE
+          keep_cross_validation_models = FALSE,
+          search_criteria = search_criteria
         )
 
         # set control options
-        if (control$save_pred)
-          grid_args$keep_cross_validation_predictions = TRUE
+        if (control$save_pred) {
+          grid_args$keep_cross_validation_predictions <- TRUE
+        }
 
         # call h2o.grid
         res <- make_h2o_call("h2o.grid", grid_args, model_args)
 
         # extract the scores from the cross-validation predictions
-        purrr::map2_dfr(.x = h2o_metrics, .y = names(h2o_metrics),
-                        .f = extract_h2o_scores, grid_args$grid_id,
-                        params, rename_args, model_mode)
+        purrr::map2_dfr(
+          .x = h2o_metrics, .y = names(h2o_metrics),
+          .f = extract_h2o_scores, grid_args$grid_id,
+          params, rename_args, model_mode
+        )
       })
 
     # optionally extract the predictions
-    if (control$save_pred)
-      resamples$.predictions <- extract_h2o_preds(assessment_indices, grid_ids,
-                                                  full_data_h2o, rename_args, model_mode)
+    if (control$save_pred) {
+      resamples$.predictions <- extract_h2o_preds(
+        assessment_indices, grid_ids,
+        full_data_h2o, rename_args, model_mode
+      )
+    }
 
     # optionally store/remove the models from the cluster
     if (control$save_models) {
@@ -228,14 +252,12 @@ tune_grid_h2o <-
 #' @return
 #' @keywords internal
 remove_h2o_models <- function(grid_ids) {
-
   for (grid_id in grid_ids) {
     grid <- h2o::h2o.getGrid(grid_id)
 
     for (model_id in as.character(grid@model_ids)) {
       h2o::h2o.rm(model_id)
     }
-
   }
 }
 
@@ -244,15 +266,15 @@ remove_h2o_models <- function(grid_ids) {
 #' of tibbles.
 #'
 #' @param grid_ids A character vector of the h2o ids for the tuning grids.
-#' @param rename_args A named character vector used to remap the h2o hyperparameter names
-#'   to tidymodels nomenclature. The names of the vector are the tidymodels nomenclature
-#'   and the values are the h2o nomenclature, e.g. c(mtry = "mtries", min_n = "min_rows")
+#' @param rename_args A named character vector used to remap the h2o
+#'   hyperparameter names to tidymodels nomenclature. The names of the vector
+#'   are the tidymodels nomenclature and the values are the h2o nomenclature,
+#'   e.g. c(mtry = "mtries", min_n = "min_rows")
 #'
 #' @return a list of tibbles
 #'
 #' @keywords internal
 extract_h2o_models <- function(grid_ids, rename_args) {
-
   purrr::map(grid_ids, function(grid_id) {
     grid <- h2o::h2o.getGrid(grid_id)
     model_ids <- as.character(grid@model_ids)
@@ -266,19 +288,19 @@ extract_h2o_models <- function(grid_ids, rename_args) {
 
 #' Extract the predictions for each tuning grid from the h2o cluster
 #'
-#' @param test_indices A numeric vector if the row numbers of the H2OFrame that represent
-#'   the assessment samples.
+#' @param test_indices A numeric vector if the row numbers of the H2OFrame that
+#'   represent the assessment samples.
 #' @param grid_ids A character vector of the h2o ids for the tuning grids.
 #' @param data A H2OFrame object.
-#' @param rename_args A named character vector used to remap the h2o hyperparameter names
-#'   to tidymodels nomenclature. The names of the vector are the tidymodels nomenclature
-#'   and the values are the h2o nomenclature, e.g. c(mtry = "mtries", min_n = "min_rows")
+#' @param rename_args A named character vector used to remap the h2o
+#'   hyperparameter names to tidymodels nomenclature. The names of the vector
+#'   are the tidymodels nomenclature and the values are the h2o nomenclature,
+#'   e.g. c(mtry = "mtries", min_n = "min_rows")
 #'
 #' @return A tibble
 #'
 #' @keywords internal
 extract_h2o_preds <- function(test_indices, grid_ids, data, rename_args, model_mode) {
-
   predictions <- purrr::map2(test_indices, grid_ids, function(ids, grid_id) {
     grid <- h2o::h2o.getGrid(grid_id)
     model_ids <- as.character(grid@model_ids)
@@ -287,8 +309,8 @@ extract_h2o_preds <- function(test_indices, grid_ids, data, rename_args, model_m
 
     purrr::map_dfr(seq_along(model_ids), function(i) {
       model <- h2o::h2o.getModel(model_ids[[i]])
-      args <- grid_args[i,]
-      preds <- tibble::as_tibble(predict(model, data[ids,]))
+      args <- grid_args[i, ]
+      preds <- tibble::as_tibble(predict(model, data[ids, ]))
 
       if (model_mode == "classification") {
         names(preds) <- ".pred_class"
@@ -305,17 +327,18 @@ extract_h2o_preds <- function(test_indices, grid_ids, data, rename_args, model_m
 
 #' Score the tuning results
 #'
-#' @param h2o_metric_name A character with the name of the h2o metric used to score the
-#'   tuning resamples.
-#' @param yardstick_metric_name A character with the name of the equivalent yardstick
-#'   metric used to score the tuning resamples.
+#' @param h2o_metric_name A character with the name of the h2o metric used to
+#'   score the tuning resamples.
+#' @param yardstick_metric_name A character with the name of the equivalent
+#'   yardstick metric used to score the tuning resamples.
 #' @param grid_id The h2o id for the tuning grid.
 #' @param params A named list of hyperparameters and their values.
-#' @param rename_args A named character vector used to remap the h2o hyperparameter names
-#'   to tidymodels nomenclature. The names of the vector are the tidymodels nomenclature
-#'   and the values are the h2o nomenclature, e.g. c(mtry = "mtries", min_n = "min_rows")
-#' @param model_mode The mode of the model, either "classification", "regression", or
-#'   "multiclass".
+#' @param rename_args A named character vector used to remap the h2o
+#'   hyperparameter names to tidymodels nomenclature. The names of the vector
+#'   are the tidymodels nomenclature and the values are the h2o nomenclature,
+#'   e.g. c(mtry = "mtries", min_n = "min_rows")
+#' @param model_mode The mode of the model, either "classification",
+#'   "regression", or "multiclass".
 #'
 #' @return
 #'
@@ -327,12 +350,13 @@ extract_h2o_scores <-
            params,
            rename_args,
            model_mode) {
-
     tuning_args <- names(params)
 
-    grid <- h2o::h2o.getGrid(grid_id = grid_id,
-                               sort_by = h2o_metric_name,
-                               decreasing = FALSE)
+    grid <- h2o::h2o.getGrid(
+      grid_id = grid_id,
+      sort_by = h2o_metric_name,
+      decreasing = FALSE
+    )
 
     scores <- as.data.frame(grid@summary_table)
     scores[, ncol(scores)] <-
@@ -364,12 +388,11 @@ extract_h2o_scores <-
 #' @param object A parsnip `model_spec` object.
 #' @param model_args A list of model arguments.
 #'
-#' @return A list with algorithm, the model name and the arguments with the family
-#'   attribute set for specific models (e.g. glm).
+#' @return A list with algorithm, the model name and the arguments with the
+#'   family attribute set for specific models (e.g. glm).
 #'
 #' @keywords internal
 model_spec_to_algorithm <- function(object, model_args) {
-
   if (inherits(object, "boost_tree")) {
     model_name <- "boost_tree"
     algorithm <- "gbm"
@@ -381,17 +404,17 @@ model_spec_to_algorithm <- function(object, model_args) {
   if (inherits(object, "linear_reg")) {
     model_name <- "linear_reg"
     algorithm <- "glm"
-    model_args$family = "gaussian"
+    model_args$family <- "gaussian"
   }
   if (inherits(object, "logistic_reg")) {
     model_name <- "logistic_reg"
     algorithm <- "glm"
-    model_args$family = "binomial"
+    model_args$family <- "binomial"
   }
   if (inherits(object, "multinom_reg")) {
     model_name <- "multinom_reg"
     algorithm <- "glm"
-    model_args$family = "multinomial"
+    model_args$family <- "multinomial"
   }
   if (inherits(object, "mlp")) {
     model_name <- "mlp"

@@ -1,5 +1,4 @@
 add_mlp_h2o <- function() {
-
   parsnip::set_model_engine("mlp", "classification", "h2o")
   parsnip::set_model_engine("mlp", "regression", "h2o")
   parsnip::set_dependency("mlp", "h2o", "h2o")
@@ -207,7 +206,6 @@ h2o_mlp_train <-
            stopping_rounds = 0,
            validation = 0,
            ...) {
-
     others <- list(...)
 
     # get term names and convert to h2o
@@ -215,8 +213,9 @@ h2o_mlp_train <-
     y <- all.vars(formula)[1]
 
     # early stopping
-    if (validation > 1)
+    if (validation > 1) {
       validation <- validation / nrow(data)
+    }
 
     if (stopping_rounds > 0 & validation > 0) {
       n <- nrow(data)
@@ -228,8 +227,9 @@ h2o_mlp_train <-
     }
 
     # convert to H2OFrame (although parsnip doesn't support H2OFrames right now)
-    if (!inherits(data, "H2OFrame"))
+    if (!inherits(data, "H2OFrame")) {
       data <- h2o::as.h2o(data)
+    }
 
     if (!is.null(valid)) {
       valid <- h2o::as.h2o(valid)
@@ -240,12 +240,12 @@ h2o_mlp_train <-
       stop(
         paste(
           activation,
-          "activation function is not available when using the h2o engine.")
+          "activation function is not available when using the h2o engine."
+        )
       )
     }
 
-    activation <- switch(
-      activation,
+    activation <- switch(activation,
       relu = "Rectifier",
       tanh = "Tanh",
       maxout = "Maxout",
@@ -254,16 +254,15 @@ h2o_mlp_train <-
 
     if (activation == "Rectifier" & hidden_dropout_ratios > 0) {
       activation <- "RectifierWithDropout"
-
     } else if (activation == "Tanh" & hidden_dropout_ratios > 0) {
       activation <- "TanhWithDropout"
-
     } else if (activation == "Maxout" & hidden_dropout_ratios > 0) {
       activation <- "MaxoutWithDropout"
     }
 
-    if (hidden_dropout_ratios == 0)
+    if (hidden_dropout_ratios == 0) {
       hidden_dropout_ratios <- NULL
+    }
 
     # define arguments
     args <- list(

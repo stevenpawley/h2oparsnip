@@ -24,7 +24,6 @@
 #' control_h2o(verbose = TRUE, save_pred = FALSE)
 control_h2o <- function(verbose = FALSE, save_pred = FALSE, save_models = FALSE,
                         event_level = "first") {
-
   res <- list(
     verbose = verbose,
     save_pred = save_pred,

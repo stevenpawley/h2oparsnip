@@ -9,7 +9,7 @@ library(yardstick)
 library(tune)
 
 
-test_that('test regression metrics', {
+test_that("test regression metrics", {
   skip_on_cran()
   h2o.init(nthreads = 1)
   data(ames)
@@ -41,7 +41,7 @@ test_that('test regression metrics', {
 })
 
 
-test_that('test classification metrics multiclass', {
+test_that("test classification metrics multiclass", {
   skip_on_cran()
   h2o.init(nthreads = 1)
   data(iris)
@@ -74,7 +74,7 @@ test_that('test classification metrics multiclass', {
 })
 
 
-test_that('test classification metrics binary', {
+test_that("test classification metrics binary", {
   skip_on_cran()
   h2o.init(nthreads = 1)
   data(two_class_dat)

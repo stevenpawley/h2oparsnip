@@ -1,5 +1,4 @@
 add_rand_forest_h2o <- function() {
-
   parsnip::set_model_engine("rand_forest", "classification", "h2o")
   parsnip::set_model_engine("rand_forest", "regression", "h2o")
   parsnip::set_dependency("rand_forest", "h2o", "h2o")
@@ -185,7 +184,6 @@ h2o_rf_train <-
            stopping_rounds = 0,
            validation = 0,
            ...) {
-
     others <- list(...)
 
     # get term names and convert to h2o
@@ -193,8 +191,9 @@ h2o_rf_train <-
     y <- all.vars(formula)[1]
 
     # early stopping
-    if (validation > 1)
+    if (validation > 1) {
       validation <- validation / nrow(data)
+    }
 
     if (stopping_rounds > 0 & validation > 0) {
       n <- nrow(data)
@@ -206,15 +205,18 @@ h2o_rf_train <-
     }
 
     # convert to H2OFrame (although parsnip doesn't support H2OFrames right now)
-    if (!inherits(data, "H2OFrame"))
+    if (!inherits(data, "H2OFrame")) {
       data <- h2o::as.h2o(data)
+    }
 
-    if (!is.null(valid))
+    if (!is.null(valid)) {
       valid <- h2o::as.h2o(valid)
+    }
 
     # check for valid mtries
-    if (mtries > length(X))
+    if (mtries > length(X)) {
       mtries <- length(X)
+    }
 
     # define arguments
     args <- list(

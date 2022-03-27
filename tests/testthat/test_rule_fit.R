@@ -6,8 +6,7 @@ library(h2o)
 library(rules)
 
 
-test_that('boost_tree h2o formula method', {
-
+test_that("boost_tree h2o formula method", {
   skip_on_cran()
   h2o.init(nthreads = 1)
   iris_df <- as_tibble(iris)
@@ -27,7 +26,7 @@ test_that('boost_tree h2o formula method', {
     rule_fit(mode = "classification") %>%
     set_engine("h2o", seed = 1234)
 
-  fitted_clf <- clf %>% fit(Species ~., iris_df)
+  fitted_clf <- clf %>% fit(Species ~ ., iris_df)
 
   clf_preds <- predict(fitted_clf, iris_df)
   clf_probs <- predict(fitted_clf, iris_df, type = "prob")
@@ -48,7 +47,7 @@ test_that('boost_tree h2o formula method', {
   h2o_regr_preds <- predict(h2o_regr_fitted, as.h2o(iris_df))
   h2o_regr_preds <- as_tibble(h2o_regr_preds)
 
-  regr <- rule_fit(mode = "regression",) %>%
+  regr <- rule_fit(mode = "regression", ) %>%
     set_engine("h2o", seed = 1234)
 
   fitted_regr <- regr %>% fit(Sepal.Length ~ ., iris_df)

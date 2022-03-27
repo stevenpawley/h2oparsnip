@@ -21,7 +21,7 @@ regression, a value of 0 produces Ridge regression.}
 "ordinal", "multinomial", "poisson", "gamma", "tweedie",
 "negativebinomial")}
 
-\item{...}{other arguments not currently used}
+\item{...}{other arguments passed to the h2o engine.}
 }
 \value{
 evaluated h2o model call

@@ -17,6 +17,7 @@ h2o_gbm_train(
   min_split_improvement = 1e-05,
   stopping_rounds = 0,
   validation = 0,
+  algorithm = "h2o.gbm",
   ...
 )
 }
@@ -55,7 +56,10 @@ is a random proportion of data in `x` and `y` that are used for performance
 assessment and potential early stopping. If 1 or greater, it is the _number_
 of training set samples use for these purposes.}
 
-\item{...}{other arguments not currently used.}
+\item{algorithm}{Whether to use the default h2o 'h2o.gbm' algorithm or use
+'h2o.xgboost' via h2o.}
+
+\item{...}{other arguments passed to the h2o engine.}
 }
 \value{
 evaluated h2o model call

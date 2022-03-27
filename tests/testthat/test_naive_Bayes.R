@@ -5,8 +5,7 @@ library(tibble)
 library(magrittr)
 library(h2o)
 
-test_that('naive_Bayes h2o formula method', {
-
+test_that("naive_Bayes h2o formula method", {
   skip_on_cran()
 
   h2o.init(nthreads = 1)
@@ -26,7 +25,7 @@ test_that('naive_Bayes h2o formula method', {
   clf <- naive_Bayes(mode = "classification") %>%
     set_engine("h2o", seed = 1234)
 
-  fitted_clf <- clf %>% fit(Species ~., iris_df)
+  fitted_clf <- clf %>% fit(Species ~ ., iris_df)
 
   clf_preds <- predict(fitted_clf, iris_df)
   clf_probs <- predict(fitted_clf, iris_df, type = "prob")

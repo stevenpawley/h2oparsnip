@@ -1,5 +1,4 @@
 add_boost_tree_h2o <- function() {
-
   parsnip::set_model_engine("boost_tree", "classification", "h2o")
   parsnip::set_model_engine("boost_tree", "regression", "h2o")
   parsnip::set_dependency("boost_tree", "h2o", "h2o")
@@ -187,10 +186,10 @@ add_boost_tree_h2o <- function() {
       func = c(pkg = "h2o", fun = "h2o.predict"),
       args = list(
         object = quote(object$fit),
-        newdata = quote(new_data))
+        newdata = quote(new_data)
+      )
     )
   )
-
 }
 
 #' Wrapper for training a h2o.gbm model as part of a parsnip `boost_tree`
@@ -219,7 +218,9 @@ add_boost_tree_h2o <- function() {
 #' is a random proportion of data in `x` and `y` that are used for performance
 #' assessment and potential early stopping. If 1 or greater, it is the _number_
 #' of training set samples use for these purposes.
-#' @param ... other arguments not currently used.
+#' @param algorithm Whether to use the default h2o 'h2o.gbm' algorithm or use
+#'   'h2o.xgboost' via h2o.
+#' @param ... other arguments passed to the h2o engine.
 #'
 #' @return evaluated h2o model call
 #' @export
@@ -235,8 +236,8 @@ h2o_gbm_train <-
            min_split_improvement = 1e-05,
            stopping_rounds = 0,
            validation = 0,
+           algorithm = "h2o.gbm",
            ...) {
-
     others <- list(...)
 
     # get term names and convert to h2o
@@ -244,8 +245,9 @@ h2o_gbm_train <-
     y <- all.vars(formula)[1]
 
     # early stopping
-    if (validation > 1)
+    if (validation > 1) {
       validation <- validation / nrow(data)
+    }
 
     if (stopping_rounds > 0 & validation > 0) {
       n <- nrow(data)
@@ -257,16 +259,18 @@ h2o_gbm_train <-
     }
 
     # convert to H2OFrame (although parsnip doesn't support H2OFrames right now)
-    if (!inherits(data, "H2OFrame"))
+    if (!inherits(data, "H2OFrame")) {
       data <- h2o::as.h2o(data)
+    }
 
     if (!is.null(valid)) {
       valid <- h2o::as.h2o(valid)
     }
 
     # convert mtry (number of features) to proportions
-    if (col_sample_rate > 1)
+    if (col_sample_rate > 1) {
       col_sample_rate <- col_sample_rate / length(X)
+    }
 
     # define arguments
     args <- list(
@@ -279,12 +283,17 @@ h2o_gbm_train <-
       min_rows = min_rows,
       learn_rate = learn_rate,
       sample_rate = sample_rate,
-      col_sample_rate = col_sample_rate,
       min_split_improvement = min_split_improvement,
       stopping_rounds = stopping_rounds
     )
 
-    res <- make_h2o_call("h2o.gbm", args, others)
+    if (algorithm == "h2o.gbm") {
+      args$col_sample_rate <- col_sample_rate
+    } else if (algorithm == "h2o.xgboost") {
+      args$colsample_bynode <- col_sample_rate
+    }
+
+    res <- make_h2o_call(algorithm, args, others)
 
     res
   }

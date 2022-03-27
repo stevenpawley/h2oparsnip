@@ -5,8 +5,7 @@ library(magrittr)
 library(h2o)
 
 
-test_that('boost_tree h2o formula method', {
-
+test_that("boost_tree h2o formula method", {
   skip_on_cran()
   h2o.init(nthreads = 1)
   iris_df <- as_tibble(iris)
@@ -34,7 +33,7 @@ test_that('boost_tree h2o formula method', {
     ) %>%
     set_engine("h2o", seed = 1234)
 
-  fitted_clf <- clf %>% fit(Species ~., iris_df)
+  fitted_clf <- clf %>% fit(Species ~ ., iris_df)
 
   clf_preds <- predict(fitted_clf, iris_df)
   clf_probs <- predict(fitted_clf, iris_df, type = "prob")
@@ -62,7 +61,8 @@ test_that('boost_tree h2o formula method', {
     mode = "regression",
     trees = 50,
     min_n = 1,
-    mtry = -1) %>%
+    mtry = -1
+  ) %>%
     set_engine("h2o", seed = 1234)
 
   fitted_regr <- regr %>% fit(Sepal.Length ~ ., iris_df)

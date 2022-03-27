@@ -32,7 +32,6 @@ print.automl <- function(x, ...) {
 
 
 add_automl <- function() {
-
   # define model
   parsnip::set_new_model("automl")
 
@@ -189,8 +188,9 @@ h2o_automl_train <- function(formula, data, ...) {
   y <- all.vars(formula)[1]
 
   # convert to H2OFrame (although parsnip doesn't support H2OFrames right now)
-  if (!inherits(data, "H2OFrame"))
+  if (!inherits(data, "H2OFrame")) {
     data <- h2o::as.h2o(data)
+  }
 
   # define arguments
   args <- list(
@@ -204,4 +204,3 @@ h2o_automl_train <- function(formula, data, ...) {
 
   res
 }
-

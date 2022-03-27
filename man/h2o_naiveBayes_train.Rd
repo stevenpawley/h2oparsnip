@@ -14,10 +14,10 @@ h2o_naiveBayes_train(formula, data, laplace = 0, ...)
 
 \item{laplace}{numeric, the Laplace smoothing parameter, must be >= 0.}
 
-\item{...}{other arguments not currently used}
+\item{...}{other arguments passed to the h2o engine.}
 }
 \value{
-evaluated h2o model call
+a fitted h2o model.
 }
 \description{
 Wrapper for training a h2o.naiveBayes model as part of a discrim `naive_Bayes`

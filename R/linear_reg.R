@@ -1,5 +1,4 @@
 add_linear_reg_h2o <- function() {
-
   parsnip::set_model_engine("linear_reg", "regression", "h2o")
   parsnip::set_dependency("linear_reg", "h2o", "h2o")
 

@@ -31,9 +31,9 @@
 #'
 #' # fit a parsnip model using the h2o engine
 #' clf <- mlp(mode = "classification") %>%
-#'     set_engine("h2o")
+#'   set_engine("h2o")
 #'
-#' model_fit <- clf %>% fit(Species ~., iris)
+#' model_fit <- clf %>% fit(Species ~ ., iris)
 #'
 #' # save the parsnip model
 #' saveRDS(model_fit, file.path(tempdir(), "my_model.rds"))

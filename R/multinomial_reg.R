@@ -1,5 +1,4 @@
 add_multinom_reg_h2o <- function() {
-
   parsnip::set_model_engine("multinom_reg", "classification", "h2o")
   parsnip::set_dependency("multinom_reg", "h2o", "h2o")
 

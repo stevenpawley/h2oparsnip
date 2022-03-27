@@ -9,7 +9,7 @@
 #' @param family character, one of c("gaussian", "binomial", "quasibinomial",
 #'   "ordinal", "multinomial", "poisson", "gamma", "tweedie",
 #'   "negativebinomial")
-#' @param ... other arguments not currently used
+#' @param ... other arguments passed to the h2o engine.
 #'
 #' @return evaluated h2o model call
 #' @export
@@ -20,7 +20,6 @@ h2o_glm_train <-
            lambda = NULL,
            family = NULL,
            ...) {
-
     others <- list(...)
 
     # get term names and convert to h2o
@@ -28,8 +27,9 @@ h2o_glm_train <-
     y <- all.vars(formula)[1]
 
     # convert to H2OFrame (although parsnip doesn't support H2OFrames right now)
-    if (!inherits(data, "H2OFrame"))
+    if (!inherits(data, "H2OFrame")) {
       data <- h2o::as.h2o(data)
+    }
 
     # define arguments
     args <- list(
@@ -43,14 +43,17 @@ h2o_glm_train <-
 
     res <- make_h2o_call("h2o.glm", args, others)
 
-    if (!"alpha" %in% names(res@parameters))
+    if (!"alpha" %in% names(res@parameters)) {
       res@parameters$alpha <- alpha
+    }
 
-    if (!"lambda" %in% names(res@parameters))
+    if (!"lambda" %in% names(res@parameters)) {
       res@parameters$lambda <- lambda
+    }
 
-    if (!"family" %in% names(res@parameters))
+    if (!"family" %in% names(res@parameters)) {
       res@parameters$family <- family
+    }
 
     res
   }

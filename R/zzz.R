@@ -19,4 +19,3 @@
   add_linear_reg_h2o()
   add_automl()
 }
-

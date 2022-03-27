@@ -9,8 +9,7 @@ library(yardstick)
 library(tune)
 
 
-test_that('test for control_h2o options', {
-
+test_that("test for control_h2o options", {
   skip_on_cran()
   h2o.init(nthreads = 1)
   data(ames)

@@ -6,7 +6,6 @@ library(h2o)
 
 
 test_that("model persistence, model spec", {
-
   skip_on_cran()
 
   h2o.init(nthreads = 1)
@@ -16,7 +15,7 @@ test_that("model persistence, model spec", {
     mlp(mode = "classification") %>%
     set_engine("h2o", seed = 1234)
 
-  fitted_clf <- clf %>% fit(Species ~., iris_df)
+  fitted_clf <- clf %>% fit(Species ~ ., iris_df)
   preds <- predict(fitted_clf, iris_df)
 
   # save model

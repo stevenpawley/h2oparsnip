@@ -1,5 +1,4 @@
 make_h2o_call <- function(.fn, args, others) {
-
   # remove args with NULLs
   args <- args[lengths(args) != 0]
 

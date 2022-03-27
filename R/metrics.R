@@ -49,8 +49,8 @@ mse.data.frame <- function(data, truth, estimate, na_rm = TRUE, ...) {
     metric_nm = "mse",
     metric_fn = mse_vec,
     data = data,
-    truth = !! rlang::enquo(truth),
-    estimate = !! rlang::enquo(estimate),
+    truth = !!rlang::enquo(truth),
+    estimate = !!rlang::enquo(estimate),
     na_rm = na_rm,
     ...
   )
@@ -58,7 +58,6 @@ mse.data.frame <- function(data, truth, estimate, na_rm = TRUE, ...) {
 
 #' @importFrom yardstick rsq rmse accuracy mn_log_loss pr_auc roc_auc
 convert_h2o_metrics <- function(metrics) {
-
   allowed_metrics <- c(
     # regression
     "yardstick::rsq",
@@ -88,8 +87,7 @@ convert_h2o_metrics <- function(metrics) {
   metric_names <- gsub("h2oparsnip::", "", metric_names)
 
   convert_metric <- function(yardstick_name) {
-    switch(
-      yardstick_name,
+    switch(yardstick_name,
       # regression
       rsq = "r2",
       rmse = "rmse",

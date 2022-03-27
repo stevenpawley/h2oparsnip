@@ -5,8 +5,7 @@ library(magrittr)
 library(h2o)
 
 
-test_that('multinom_reg h2o formula method', {
-
+test_that("multinom_reg h2o formula method", {
   skip_on_cran()
 
   h2o.init(nthreads = 1)
@@ -27,7 +26,7 @@ test_that('multinom_reg h2o formula method', {
   clf <- multinom_reg(mode = "classification") %>%
     set_engine("h2o", seed = 1234)
 
-  fitted_clf <- clf %>% fit(Species ~., iris_df)
+  fitted_clf <- clf %>% fit(Species ~ ., iris_df)
 
   clf_preds <- predict(fitted_clf, iris_df)
   clf_probs <- predict(fitted_clf, iris_df, type = "prob")
@@ -36,5 +35,4 @@ test_that('multinom_reg h2o formula method', {
   expect_equal(clf_probs[[1]], h2o_clf_preds$setosa)
   expect_equal(clf_probs[[2]], h2o_clf_preds$versicolor)
   expect_equal(clf_probs[[3]], h2o_clf_preds$virginica)
-
 })

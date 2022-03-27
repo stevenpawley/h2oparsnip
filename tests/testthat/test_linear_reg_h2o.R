@@ -4,8 +4,7 @@ library(tibble)
 library(magrittr)
 library(h2o)
 
-test_that('linear_reg h2o formula method', {
-
+test_that("linear_reg h2o formula method", {
   skip_on_cran()
 
   h2o.init(nthreads = 1)
