@@ -7,16 +7,17 @@
 extract_h2o_preds(test_indices, grid_ids, data, rename_args, model_mode)
 }
 \arguments{
-\item{test_indices}{A numeric vector if the row numbers of the H2OFrame that represent
-the assessment samples.}
+\item{test_indices}{A numeric vector if the row numbers of the H2OFrame that
+represent the assessment samples.}
 
 \item{grid_ids}{A character vector of the h2o ids for the tuning grids.}
 
 \item{data}{A H2OFrame object.}
 
-\item{rename_args}{A named character vector used to remap the h2o hyperparameter names
-to tidymodels nomenclature. The names of the vector are the tidymodels nomenclature
-and the values are the h2o nomenclature, e.g. c(mtry = "mtries", min_n = "min_rows")}
+\item{rename_args}{A named character vector used to remap the h2o
+hyperparameter names to tidymodels nomenclature. The names of the vector
+are the tidymodels nomenclature and the values are the h2o nomenclature,
+e.g. c(mtry = "mtries", min_n = "min_rows")}
 }
 \value{
 A tibble

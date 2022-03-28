@@ -23,23 +23,24 @@ tune_grid_h2o(
 \item{resamples}{An `rset` object.}
 
 \item{param_info}{A `dials::parameters()` object or NULL. If none is given, a
-parameters set is derived from other arguments. Passing this argument can be useful
-when parameter ranges need to be customized.}
+parameters set is derived from other arguments. Passing this argument can
+be useful when parameter ranges need to be customized.}
 
-\item{grid}{A `data.frame` of tuning combinations or a positive integer. The data
-frame should have columns for each parameter being tuned and rows for tuning
-parameter candidates. An integer denotes the number of candidate parameter sets to
-be created automatically. If a positive integer is used or no tuning grid is
-supplied, then a semi-random grid via `dials::grid_latin_hypercube` is created based
-on the specified number of tuning iterations (default size = 10).}
+\item{grid}{A `data.frame` of tuning combinations or a positive integer. The
+data frame should have columns for each parameter being tuned and rows for
+tuning parameter candidates. An integer denotes the number of candidate
+parameter sets to be created automatically. If a positive integer is used
+or no tuning grid is supplied, then a semi-random grid via
+`dials::grid_latin_hypercube` is created based on the specified number of
+tuning iterations (default size = 10).}
 
-\item{metrics}{A `yardstick::metric_set` or NULL. Note that not all yardstick metrics
-can be used with `tune_grid_h2o`. The metrics must be one of `yardstick::rsq`,
-`yardstick::rmse` or `h2oparsnip::mse` for regression models, and
-`yardstick::accuracy`, `yardstick::mn_log_loss`, `yardstick::roc_auc` or
-`yardstick::pr_auc` for classification models. If NULL then the default is
-`yardstick::rsq` for regression models and `yardstick::mn_log_loss` for
-classification models.}
+\item{metrics}{A `yardstick::metric_set` or NULL. Note that not all yardstick
+metrics can be used with `tune_grid_h2o`. The metrics must be one of
+`yardstick::rsq`, `yardstick::rmse` or `h2oparsnip::mse` for regression
+models, and `yardstick::accuracy`, `yardstick::mn_log_loss`,
+`yardstick::roc_auc` or `yardstick::pr_auc` for classification models. If
+NULL then the default is `yardstick::rsq` for regression models and
+`yardstick::mn_log_loss` for classification models.}
 
 \item{control}{An object used to modify the tuning process.}
 
@@ -54,9 +55,10 @@ hyperparameter tuning.
 }
 \section{Limitations}{
 
-- Only model arguments can be tuned, not arguments in the preprocessing recipes.
+- Only model arguments can be tuned, not arguments in the preprocessing
+recipes.
 
-- Parsnip only allows `data.frame` and `tbl_spark` objects to be passed
-to the `fit` method, not `H2OFrame` objects.
+- Parsnip only allows `data.frame` and `tbl_spark` objects to be passed to
+the `fit` method, not `H2OFrame` objects.
 }
 

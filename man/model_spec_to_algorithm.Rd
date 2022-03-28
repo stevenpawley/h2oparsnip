@@ -12,8 +12,8 @@ model_spec_to_algorithm(object, model_args)
 \item{model_args}{A list of model arguments.}
 }
 \value{
-A list with algorithm, the model name and the arguments with the family
-  attribute set for specific models (e.g. glm).
+A list with algorithm, the model name and the arguments with the
+  family attribute set for specific models (e.g. glm).
 }
 \description{
 Return the equivalent h2o algorithm name for a parsnip `model_spec` object.

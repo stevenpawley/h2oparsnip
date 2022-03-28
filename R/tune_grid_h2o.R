@@ -186,7 +186,8 @@ tune_grid_h2o <-
           hyper_params = params,
           keep_cross_validation_predictions = FALSE,
           keep_cross_validation_models = FALSE,
-          search_criteria = search_criteria
+          search_criteria = search_criteria,
+          parallelism = 0
         )
 
         # set control options

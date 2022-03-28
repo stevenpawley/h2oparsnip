@@ -10,9 +10,10 @@ extract_h2o_models(grid_ids, rename_args)
 \arguments{
 \item{grid_ids}{A character vector of the h2o ids for the tuning grids.}
 
-\item{rename_args}{A named character vector used to remap the h2o hyperparameter names
-to tidymodels nomenclature. The names of the vector are the tidymodels nomenclature
-and the values are the h2o nomenclature, e.g. c(mtry = "mtries", min_n = "min_rows")}
+\item{rename_args}{A named character vector used to remap the h2o
+hyperparameter names to tidymodels nomenclature. The names of the vector
+are the tidymodels nomenclature and the values are the h2o nomenclature,
+e.g. c(mtry = "mtries", min_n = "min_rows")}
 }
 \value{
 a list of tibbles

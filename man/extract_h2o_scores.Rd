@@ -14,22 +14,23 @@ extract_h2o_scores(
 )
 }
 \arguments{
-\item{h2o_metric_name}{A character with the name of the h2o metric used to score the
-tuning resamples.}
+\item{h2o_metric_name}{A character with the name of the h2o metric used to
+score the tuning resamples.}
 
-\item{yardstick_metric_name}{A character with the name of the equivalent yardstick
-metric used to score the tuning resamples.}
+\item{yardstick_metric_name}{A character with the name of the equivalent
+yardstick metric used to score the tuning resamples.}
 
 \item{grid_id}{The h2o id for the tuning grid.}
 
 \item{params}{A named list of hyperparameters and their values.}
 
-\item{rename_args}{A named character vector used to remap the h2o hyperparameter names
-to tidymodels nomenclature. The names of the vector are the tidymodels nomenclature
-and the values are the h2o nomenclature, e.g. c(mtry = "mtries", min_n = "min_rows")}
+\item{rename_args}{A named character vector used to remap the h2o
+hyperparameter names to tidymodels nomenclature. The names of the vector
+are the tidymodels nomenclature and the values are the h2o nomenclature,
+e.g. c(mtry = "mtries", min_n = "min_rows")}
 
-\item{model_mode}{The mode of the model, either "classification", "regression", or
-"multiclass".}
+\item{model_mode}{The mode of the model, either "classification",
+"regression", or "multiclass".}
 }
 \value{
 
