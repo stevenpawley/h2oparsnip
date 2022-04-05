@@ -16,8 +16,9 @@ are implemented:
 - h2o.randomForest engine added to parsnip::rand_forest model specification
 - h2o.glm engine added to multinom_reg, logistic_reg and linear_reg model
 specifications
-- h2o.naiveBayes engine added to naive_Bayes specification (requires the discrim package)
+- h2o.naiveBayes engine added to naive_Bayes specification
 - a new model, automl
+- h2o.rulefit engine added to parsnip::rule_fit
 
 ## Installation
 
@@ -60,3 +61,20 @@ tune_results <- tune_grid(
   metrics = metric_set(rmse)
 )
 ```
+
+## Tuning (alternative)
+
+A problem with using `tune::tune_grid` is that performance is reduced because the data for every tuning hyperparameter iteration and resampling is moved from R to the h2o cluster. To minimize this, the `tune_grid_h2o` function can be used to tune model arguments, as a near drop-in replacement:
+
+```
+tune_results <- tune_grid_h2o(
+  object = gbm,
+  preprocessor = rec,
+  resamples = resamples,
+  grid = params,
+  metrics = metric_set(rmse)
+)
+```
+
+Currently, `tune_grid_h2o` can only tune model parameters and does not handle recipes with tunable parameters. `tune_grid_h2o` moves the data to the h2o cluster only once, i.e. the complete dataset specified by the `resamples` argument is moved to the cluster, and then the equivalent h2o.frame is split based on the row indices in the resampling object, and the `h2o::h2o.grid` function is used for tuning on the h2o frames. To avoid repeatedly moving predictions back from h2o to R, all metrics are also calculated on the cluster. This restricts the range of metrics to what is available in h2o (`tune_grid_h2o` maps **yardstick** metrics to their h2o equivalents). The available metrics are listed in the `tune_grid_h2o` help documentation. However, hyperparameter tuning using `tune_grid_h2o` should be similarly performant as when using h2o directly.
+
