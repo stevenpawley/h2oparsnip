@@ -78,3 +78,6 @@ tune_results <- tune_grid_h2o(
 
 Currently, `tune_grid_h2o` can only tune model parameters and does not handle recipes with tunable parameters. `tune_grid_h2o` moves the data to the h2o cluster only once, i.e. the complete dataset specified by the `resamples` argument is moved to the cluster, and then the equivalent h2o.frame is split based on the row indices in the resampling object, and the `h2o::h2o.grid` function is used for tuning on the h2o frames. To avoid repeatedly moving predictions back from h2o to R, all metrics are also calculated on the cluster. This restricts the range of metrics to what is available in h2o (`tune_grid_h2o` maps **yardstick** metrics to their h2o equivalents). The available metrics are listed in the `tune_grid_h2o` help documentation. However, hyperparameter tuning using `tune_grid_h2o` should be similarly performant as when using h2o directly.
 
+### Control
+
+Similar to `tune::control_grid`, details of `tune_grid_h2o` can be configured using `tune_grid_h2o(control = control_h2o())'. This allows the predictions and/or models to be saved (the default is that they are removed after tuning to avoid clutter in the cluster).
