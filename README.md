@@ -80,4 +80,4 @@ Currently, `tune_grid_h2o` can only tune model parameters and does not handle re
 
 ### Control
 
-Similar to `tune::control_grid`, details of `tune_grid_h2o` can be configured using `tune_grid_h2o(control = control_h2o())'. This allows the predictions and/or models to be saved (the default is that they are removed after tuning to avoid clutter in the cluster).
+Similar to `tune::control_grid`, details of `tune_grid_h2o` can be configured using `tune_grid_h2o(control = control_h2o())`. This allows the predictions and/or models to be saved (the default is that they are removed after tuning to avoid clutter in the cluster).
