@@ -20,11 +20,6 @@ for each model evaluated.}
 \item{save_models}{A logical for whether to retain the models associated with the
 tuning and resampling iterations within the h2o cluster and append their h2o model
 ids to the resamples object as a '.models' column.}
-
-\item{event_level}{A single string containing either "first" or "second". This
-argument is passed on to yardstick metric functions when any type of class
-prediction is made, and specifies which level of the outcome is considered the
-"event".}
 }
 \value{
 An object of `control_grid` and `control_resamples` class.

@@ -11,10 +11,6 @@
 #' @param save_models A logical for whether to retain the models associated with the
 #'   tuning and resampling iterations within the h2o cluster and append their h2o model
 #'   ids to the resamples object as a '.models' column.
-#' @param event_level A single string containing either "first" or "second". This
-#'   argument is passed on to yardstick metric functions when any type of class
-#'   prediction is made, and specifies which level of the outcome is considered the
-#'   "event".
 #'
 #' @return An object of `control_grid` and `control_resamples` class.
 #' @export
@@ -27,8 +23,7 @@ control_h2o <- function(verbose = FALSE, save_pred = FALSE, save_models = FALSE,
   res <- list(
     verbose = verbose,
     save_pred = save_pred,
-    save_models = save_models,
-    event_level = event_level
+    save_models = save_models
   )
 
   class(res) <- c("control_grid", "control_resamples")
