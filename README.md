@@ -5,6 +5,8 @@
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
 
+**NOTE the development of h2oparsnip is being integrated within tidymodels as the [agua](https://github.com/tidymodels/agua) package. New issues and feature requests should be made in the agua repository**.
+
 ```h2oparsnip``` provides a set of wrappers to bind h2o algorthms with the
 'parsnip' package.
 
